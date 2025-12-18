@@ -50,6 +50,95 @@ rustc_index::newtype_index! {
     pub struct ExpressionId {}
 }
 
+rustc_index::newtype_index! {
+    /// ID of an MC/DC condition within a decision. Values ascend from 0.
+    ///
+    /// Each condition in a boolean expression (operands of `&&` and `||`) gets
+    /// a unique ConditionId within its enclosing decision.
+    ///
+    /// Note: LLVM uses `int16_t` for condition IDs, limiting decisions to
+    /// a practical maximum of 6 conditions (due to exponential bitmap growth).
+    #[derive(HashStable)]
+    #[encodable]
+    #[orderable]
+    #[debug_format = "ConditionId({})"]
+    pub struct ConditionId {}
+}
+
+rustc_index::newtype_index! {
+    /// ID of an MC/DC decision (a top-level boolean expression).
+    ///
+    /// A decision is composed of one or more conditions connected by
+    /// `&&` and `||` operators. Each decision gets its own bitmap region
+    /// for tracking which test vectors have been executed.
+    #[derive(HashStable)]
+    #[encodable]
+    #[orderable]
+    #[debug_format = "DecisionId({})"]
+    pub struct DecisionId {}
+}
+
+/// Represents the next condition or decision outcome in an MC/DC decision tree.
+///
+/// When a condition evaluates to true or false, control flows to either:
+/// - Another condition (represented by `Some(ConditionId)`)
+/// - The decision outcome (represented by `None`)
+pub type ConditionIdOrDecisionOutcome = Option<ConditionId>;
+
+/// MC/DC condition within a decision.
+///
+/// Each condition tracks which condition (or decision outcome) is reached
+/// when this condition evaluates to true or false.
+#[derive(Clone, Debug)]
+#[derive(TyEncodable, TyDecodable, Hash, HashStable)]
+pub struct MCDCConditionInfo {
+    /// Unique ID of this condition within its decision.
+    pub id: ConditionId,
+    /// True if this condition is wrapped in an odd number of `!` operators.
+    /// Used to correctly report the underlying variable per LLVM #109952.
+    pub is_negated: bool,
+    /// Next condition if this condition is true, or None if true leads to decision outcome.
+    pub true_next: ConditionIdOrDecisionOutcome,
+    /// Next condition if this condition is false, or None if false leads to decision outcome.
+    pub false_next: ConditionIdOrDecisionOutcome,
+}
+
+/// MC/DC decision (a top-level boolean expression).
+///
+/// A decision represents a complete boolean expression like `a && b || c`.
+/// It contains multiple conditions and tracks the bitmap location for
+/// recording which execution paths (test vectors) have been taken.
+#[derive(Clone, Debug)]
+#[derive(TyEncodable, TyDecodable, Hash, HashStable)]
+pub struct MCDCDecisionInfo {
+    /// Unique ID of this decision within the function.
+    pub id: DecisionId,
+    /// Byte index in the MC/DC bitmap where this decision's test vectors are stored.
+    pub bitmap_idx: u32,
+    /// Number of conditions in this decision. LLVM limits this to 6.
+    pub num_conditions: u16,
+}
+
+/// Span information for an MC/DC decision.
+#[derive(Clone, Debug)]
+#[derive(TyEncodable, TyDecodable, Hash, HashStable)]
+pub struct MCDCDecisionSpan {
+    pub span: Span,
+    pub decision_info: MCDCDecisionInfo,
+    pub conditions: Vec<MCDCConditionInfo>,
+}
+
+/// Span information for an MC/DC condition.
+#[derive(Clone, Debug)]
+#[derive(TyEncodable, TyDecodable, Hash, HashStable)]
+pub struct MCDCConditionSpan {
+    pub span: Span,
+    pub decision_id: DecisionId,
+    pub condition_id: ConditionId,
+    pub true_marker: BlockMarkerId,
+    pub false_marker: BlockMarkerId,
+}
+
 /// Enum that can hold a constant zero value, the ID of an physical coverage
 /// counter, or the ID of a coverage-counter expression.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -135,6 +224,22 @@ pub enum MappingKind {
     Code { bcb: BasicCoverageBlock },
     /// Associates a branch region with separate counters for true and false.
     Branch { true_bcb: BasicCoverageBlock, false_bcb: BasicCoverageBlock },
+    /// MC/DC decision region - tracks the top-level boolean expression.
+    MCDCDecision {
+        decision_id: DecisionId,
+        bitmap_idx: u32,
+        num_conditions: u16,
+    },
+    /// MC/DC branch region - extends branch with condition graph information.
+    MCDCBranch {
+        true_bcb: BasicCoverageBlock,
+        false_bcb: BasicCoverageBlock,
+        condition_id: ConditionId,
+        /// Next condition if true, or None for decision true outcome.
+        true_next_id: ConditionIdOrDecisionOutcome,
+        /// Next condition if false, or None for decision false outcome.
+        false_next_id: ConditionIdOrDecisionOutcome,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -174,6 +279,10 @@ pub struct CoverageInfoHi {
     /// data structures without having to scan the entire body first.
     pub num_block_markers: usize,
     pub branch_spans: Vec<BranchSpan>,
+    /// MC/DC decision spans - top-level boolean expressions for MC/DC coverage.
+    pub mcdc_decision_spans: Vec<MCDCDecisionSpan>,
+    /// MC/DC condition spans - individual conditions within MC/DC decisions.
+    pub mcdc_condition_spans: Vec<MCDCConditionSpan>,
 }
 
 #[derive(Clone, Debug)]

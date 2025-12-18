@@ -118,8 +118,23 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         match expr.kind {
             ExprKind::LogicalOp { op: LogicalOp::And, lhs, rhs } => {
                 let lhs_then_block = this.then_else_break_inner(block, lhs, args).into_block();
+
+                // For MC/DC: track the AND operator context before processing RHS.
+                // The LHS condition ID will be set when we record the LHS condition.
+                if let Some(coverage_info) = this.coverage_info.as_mut() {
+                    if let Some(last_condition_id) = this.last_mcdc_condition_id {
+                        coverage_info.mcdc_push_logical_op(LogicalOp::And, last_condition_id);
+                    }
+                }
+
                 let rhs_then_block =
                     this.then_else_break_inner(lhs_then_block, rhs, args).into_block();
+
+                // Pop the operator context after RHS is processed.
+                if let Some(coverage_info) = this.coverage_info.as_mut() {
+                    coverage_info.mcdc_pop_logical_op();
+                }
+
                 rhs_then_block.unit()
             }
             ExprKind::LogicalOp { op: LogicalOp::Or, lhs, rhs } => {
@@ -135,6 +150,14 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                             },
                         )
                     });
+
+                // For MC/DC: track the OR operator context before processing RHS.
+                if let Some(coverage_info) = this.coverage_info.as_mut() {
+                    if let Some(last_condition_id) = this.last_mcdc_condition_id {
+                        coverage_info.mcdc_push_logical_op(LogicalOp::Or, last_condition_id);
+                    }
+                }
+
                 let rhs_success_block = this
                     .then_else_break_inner(
                         failure_block,
@@ -145,6 +168,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         },
                     )
                     .into_block();
+
+                // Pop the operator context after RHS is processed.
+                if let Some(coverage_info) = this.coverage_info.as_mut() {
+                    coverage_info.mcdc_pop_logical_op();
+                }
 
                 // Make the LHS and RHS success arms converge to a common block.
                 // (We can't just make LHS goto RHS, because `rhs_success_block`
@@ -223,6 +251,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 // Record branch coverage info for this condition.
                 // (Does nothing if branch coverage is not enabled.)
                 this.visit_coverage_branch_condition(expr_id, then_block, else_block);
+
+                // Record MC/DC condition info for this atomic condition.
+                // (Does nothing if MC/DC coverage is not enabled.)
+                this.visit_mcdc_condition(expr_id, then_block, else_block);
 
                 let source_info = this.source_info(expr_span);
                 this.cfg.terminate(block, source_info, term);

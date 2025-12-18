@@ -38,6 +38,7 @@ use rustc_infer::infer::{InferCtxt, TyCtxtInferExt};
 use rustc_middle::hir::place::PlaceBase as HirPlaceBase;
 use rustc_middle::middle::region;
 use rustc_middle::mir::*;
+use rustc_middle::mir::coverage;
 use rustc_middle::thir::{self, ExprId, LintLevel, LocalVarId, Param, ParamId, PatKind, Thir};
 use rustc_middle::ty::{self, ScalarInt, Ty, TyCtxt, TypeVisitableExt, TypingMode};
 use rustc_middle::{bug, span_bug};
@@ -233,6 +234,10 @@ struct Builder<'a, 'tcx> {
     /// Collects additional coverage information during MIR building.
     /// Only present if coverage is enabled and this function is eligible.
     coverage_info: Option<coverageinfo::CoverageInfoBuilder>,
+
+    /// Tracks the last MC/DC condition ID assigned, for building the decision graph.
+    /// Used to link conditions via logical operators.
+    last_mcdc_condition_id: Option<coverage::ConditionId>,
 }
 
 type CaptureMap<'tcx> = SortedIndexMultiMap<usize, ItemLocalId, Capture<'tcx>>;
@@ -793,6 +798,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             var_debug_info: vec![],
             lint_level_roots_cache: GrowableBitSet::new_empty(),
             coverage_info: coverageinfo::CoverageInfoBuilder::new_if_enabled(tcx, def),
+            last_mcdc_condition_id: None,
         };
 
         assert_eq!(builder.cfg.start_new_block(), START_BLOCK);

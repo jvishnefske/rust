@@ -111,6 +111,15 @@ fn coverage_ids_info<'tcx>(
                 bcb_needs_counter.insert(true_bcb);
                 bcb_needs_counter.insert(false_bcb);
             }
+            MappingKind::MCDCDecision { .. } => {
+                // MC/DC decision regions don't have counters themselves;
+                // they describe the decision structure.
+            }
+            MappingKind::MCDCBranch { true_bcb, false_bcb, .. } => {
+                // MC/DC branches need counters for both true and false paths.
+                bcb_needs_counter.insert(true_bcb);
+                bcb_needs_counter.insert(false_bcb);
+            }
         }
     }
 

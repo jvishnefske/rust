@@ -575,7 +575,12 @@ fn write_coverage_info_hi(
     coverage_info_hi: &coverage::CoverageInfoHi,
     w: &mut dyn io::Write,
 ) -> io::Result<()> {
-    let coverage::CoverageInfoHi { num_block_markers: _, branch_spans } = coverage_info_hi;
+    let coverage::CoverageInfoHi {
+        num_block_markers: _,
+        branch_spans,
+        mcdc_decision_spans,
+        mcdc_condition_spans,
+    } = coverage_info_hi;
 
     // Only add an extra trailing newline if we printed at least one thing.
     let mut did_print = false;
@@ -584,6 +589,31 @@ fn write_coverage_info_hi(
         writeln!(
             w,
             "{INDENT}coverage branch {{ true: {true_marker:?}, false: {false_marker:?} }} => {span:?}",
+        )?;
+        did_print = true;
+    }
+
+    for decision in mcdc_decision_spans {
+        writeln!(
+            w,
+            "{INDENT}coverage mcdc_decision {{ id: {:?}, bitmap_idx: {}, conditions: {} }} => {:?}",
+            decision.decision_info.id,
+            decision.decision_info.bitmap_idx,
+            decision.decision_info.num_conditions,
+            decision.span,
+        )?;
+        did_print = true;
+    }
+
+    for condition in mcdc_condition_spans {
+        writeln!(
+            w,
+            "{INDENT}coverage mcdc_condition {{ decision: {:?}, condition: {:?}, true: {:?}, false: {:?} }} => {:?}",
+            condition.decision_id,
+            condition.condition_id,
+            condition.true_marker,
+            condition.false_marker,
+            condition.span,
         )?;
         did_print = true;
     }

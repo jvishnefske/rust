@@ -98,3 +98,48 @@ pub(crate) struct BranchRegion {
     pub(crate) true_counter: Counter,
     pub(crate) false_counter: Counter,
 }
+
+/// MC/DC Decision region - represents a top-level boolean expression.
+///
+/// Must match the layout of `LLVMRustMCDCDecisionRegion`.
+#[derive(Clone, Debug)]
+#[repr(C)]
+pub(crate) struct MCDCDecisionRegion {
+    pub(crate) cov_span: CoverageSpan,
+    /// Byte index in the MC/DC bitmap where this decision's test vectors are stored.
+    pub(crate) bitmap_idx: u32,
+    /// Number of conditions in this decision. LLVM limits this to 6.
+    pub(crate) num_conditions: u16,
+    /// Padding to ensure proper alignment.
+    pub(crate) _padding: u16,
+}
+
+/// MC/DC Branch region - extends branch with condition graph information.
+///
+/// Must match the layout of `LLVMRustMCDCBranchRegion`.
+#[derive(Clone, Debug)]
+#[repr(C)]
+pub(crate) struct MCDCBranchRegion {
+    pub(crate) cov_span: CoverageSpan,
+    pub(crate) true_counter: Counter,
+    pub(crate) false_counter: Counter,
+    /// Condition ID within the decision (0-based).
+    pub(crate) condition_id: u16,
+    /// Next condition ID if true, or special values:
+    /// - 0xFFFF: decision evaluates to true
+    /// - Other values: next condition ID + 1 (0 means condition 0)
+    pub(crate) true_next_id: u16,
+    /// Next condition ID if false, or special values:
+    /// - 0: decision evaluates to false
+    /// - Other values: next condition ID + 1
+    pub(crate) false_next_id: u16,
+    /// Padding for alignment.
+    pub(crate) _padding: u16,
+}
+
+impl MCDCBranchRegion {
+    /// Special value indicating the decision evaluates to true.
+    pub(crate) const DECISION_TRUE: u16 = 0xFFFF;
+    /// Special value indicating the decision evaluates to false.
+    pub(crate) const DECISION_FALSE: u16 = 0;
+}

@@ -10,7 +10,7 @@ use std::sync::Arc;
 use rustc_abi::Align;
 use rustc_codegen_ssa::traits::{BaseTypeCodegenMethods as _, ConstCodegenMethods};
 use rustc_middle::mir::coverage::{
-    BasicCoverageBlock, CounterId, CovTerm, CoverageIdsInfo, Expression, ExpressionId,
+    BasicCoverageBlock, ConditionId, CounterId, CovTerm, CoverageIdsInfo, Expression, ExpressionId,
     FunctionCoverageInfo, Mapping, MappingKind, Op,
 };
 use rustc_middle::ty::{Instance, TyCtxt};
@@ -151,6 +151,8 @@ fn fill_region_tables<'tcx>(
         code_regions,
         expansion_regions: _, // FIXME(Zalathar): Fill out support for expansion regions
         branch_regions,
+        mcdc_decision_regions,
+        mcdc_branch_regions,
     } = &mut covfun.regions;
 
     // For each counter/region pair in this function+file, convert it to a
@@ -168,6 +170,48 @@ fn fill_region_tables<'tcx>(
                     cov_span,
                     true_counter: counter_for_bcb(true_bcb),
                     false_counter: counter_for_bcb(false_bcb),
+                });
+            }
+            MappingKind::MCDCDecision { decision_id: _, bitmap_idx, num_conditions } => {
+                mcdc_decision_regions.push(ffi::MCDCDecisionRegion {
+                    cov_span,
+                    bitmap_idx,
+                    num_conditions,
+                    _padding: 0,
+                });
+            }
+            MappingKind::MCDCBranch {
+                true_bcb,
+                false_bcb,
+                condition_id,
+                true_next_id,
+                false_next_id,
+            } => {
+                // Encode next IDs: None (decision outcome) uses special values
+                // DECISION_TRUE (0xFFFF) and DECISION_FALSE (0)
+                let encode_next = |next: Option<ConditionId>, decision_outcome_true: bool| -> u16 {
+                    match next {
+                        Some(id) => id.as_u32() as u16 + 1, // Condition ID + 1
+                        None => {
+                            if decision_outcome_true {
+                                ffi::MCDCBranchRegion::DECISION_TRUE
+                            } else {
+                                ffi::MCDCBranchRegion::DECISION_FALSE
+                            }
+                        }
+                    }
+                };
+
+                mcdc_branch_regions.push(ffi::MCDCBranchRegion {
+                    cov_span,
+                    true_counter: counter_for_bcb(true_bcb),
+                    false_counter: counter_for_bcb(false_bcb),
+                    condition_id: condition_id.as_u32() as u16,
+                    // true_next_id: None means decision is TRUE
+                    true_next_id: encode_next(true_next_id, true),
+                    // false_next_id: None means decision is FALSE
+                    false_next_id: encode_next(false_next_id, false),
+                    _padding: 0,
                 });
             }
         }

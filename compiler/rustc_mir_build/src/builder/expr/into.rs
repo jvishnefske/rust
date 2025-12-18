@@ -69,6 +69,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let then_source_info = this.source_info(then_span);
                 let condition_scope = this.local_scope();
 
+                // Start MC/DC decision tracking for the if condition.
+                let cond_span = this.thir[cond].span;
+                let mcdc_decision_id = this.mcdc_enter_decision(cond_span);
+
                 let then_and_else_blocks = this.in_scope(
                     (if_then_scope, then_source_info),
                     LintLevel::Inherited,
@@ -104,6 +108,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                         then_block.and(else_block)
                     },
                 );
+
+                // Finalize MC/DC decision tracking.
+                if let Some(decision_id) = mcdc_decision_id {
+                    this.mcdc_exit_decision(decision_id);
+                }
 
                 // Unpack `BlockAnd<BasicBlock>` into `(then_blk, else_blk)`.
                 let (then_blk, mut else_blk);
@@ -159,6 +168,10 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let condition_scope = this.local_scope();
                 let source_info = this.source_info(expr.span);
 
+                // Start MC/DC decision tracking for this logical expression.
+                // This is for standalone logical ops like `let x = a && b;`
+                let mcdc_decision_id = this.mcdc_enter_decision(expr.span);
+
                 // We first evaluate the left-hand side of the predicate ...
                 let (then_block, else_block) =
                     this.in_if_then_scope(condition_scope, expr.span, |this| {
@@ -197,6 +210,11 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 // Instrument the lowered RHS's value for condition coverage.
                 // (Does nothing if condition coverage is not enabled.)
                 this.visit_coverage_standalone_condition(rhs, destination, &mut rhs_block);
+
+                // Finalize MC/DC decision tracking.
+                if let Some(decision_id) = mcdc_decision_id {
+                    this.mcdc_exit_decision(decision_id);
+                }
 
                 let target = this.cfg.start_new_block();
                 this.cfg.goto(rhs_block, source_info, target);

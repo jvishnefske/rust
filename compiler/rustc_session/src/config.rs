@@ -187,6 +187,17 @@ pub enum CoverageLevel {
     /// instrumentation, so it might be removed in the future when MC/DC is
     /// sufficiently complete, or if it is making MC/DC changes difficult.
     Condition,
+    /// Full Modified Condition/Decision Coverage (MC/DC) instrumentation.
+    ///
+    /// Tracks condition independence within boolean expressions (`&&`, `||`)
+    /// and treats refutable patterns as MC/DC decisions. This enables
+    /// DO-178C Level A/B compliance for safety-critical applications.
+    ///
+    /// MC/DC requires that each condition in a decision has been shown to
+    /// independently affect the decision's outcome.
+    ///
+    /// Note: LLVM limits decisions to a maximum of 6 conditions.
+    Mcdc,
 }
 
 // The different settings that the `-Z offload` flag can have.
