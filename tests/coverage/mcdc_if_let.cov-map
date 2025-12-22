@@ -1,0 +1,161 @@
+Function name: mcdc_if_let::if_let_enum
+Raw bytes (43): 0x[01, 01, 01, 01, 05, 07, 01, 3a, 01, 00, 1d, 01, 01, 05, 00, 0e, 20, 02, 05, 03, 0c, 00, 16, 01, 00, 19, 00, 1e, 02, 00, 1f, 02, 06, 05, 02, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_if_let.rs
+Number of expressions: 1
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+Number of file 0 mappings: 7
+- Code(Counter(0)) at (prev + 58, 1) to (start + 0, 29)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 3, 12) to (start + 0, 22)
+    true  = (c0 - c1)
+    false = c1
+- Code(Counter(0)) at (prev + 0, 25) to (start + 0, 30)
+- Code(Expression(0, Sub)) at (prev + 0, 31) to (start + 2, 6)
+    = (c0 - c1)
+- Code(Counter(1)) at (prev + 2, 12) to (start + 2, 6)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c1
+
+Function name: mcdc_if_let::if_let_option
+Raw bytes (48): 0x[01, 01, 01, 01, 05, 08, 01, 14, 01, 00, 25, 01, 01, 05, 00, 0e, 20, 02, 05, 03, 0c, 00, 13, 02, 00, 11, 00, 12, 01, 00, 16, 00, 1b, 02, 00, 1c, 02, 06, 05, 02, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_if_let.rs
+Number of expressions: 1
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+Number of file 0 mappings: 8
+- Code(Counter(0)) at (prev + 20, 1) to (start + 0, 37)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 3, 12) to (start + 0, 19)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 17) to (start + 0, 18)
+    = (c0 - c1)
+- Code(Counter(0)) at (prev + 0, 22) to (start + 0, 27)
+- Code(Expression(0, Sub)) at (prev + 0, 28) to (start + 2, 6)
+    = (c0 - c1)
+- Code(Counter(1)) at (prev + 2, 12) to (start + 2, 6)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c1
+
+Function name: mcdc_if_let::if_let_result
+Raw bytes (48): 0x[01, 01, 01, 01, 05, 08, 01, 1f, 01, 00, 2b, 01, 01, 05, 00, 0e, 20, 02, 05, 03, 0c, 00, 11, 02, 00, 0f, 00, 10, 01, 00, 14, 00, 19, 02, 00, 1a, 02, 06, 05, 02, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_if_let.rs
+Number of expressions: 1
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+Number of file 0 mappings: 8
+- Code(Counter(0)) at (prev + 31, 1) to (start + 0, 43)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 3, 12) to (start + 0, 17)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 15) to (start + 0, 16)
+    = (c0 - c1)
+- Code(Counter(0)) at (prev + 0, 20) to (start + 0, 25)
+- Code(Expression(0, Sub)) at (prev + 0, 26) to (start + 2, 6)
+    = (c0 - c1)
+- Code(Counter(1)) at (prev + 2, 12) to (start + 2, 6)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c1
+
+Function name: mcdc_if_let::if_let_with_bool_guard
+Raw bytes (73): 0x[01, 01, 05, 01, 05, 01, 13, 05, 09, 01, 13, 05, 09, 0b, 01, 2a, 01, 00, 3b, 01, 01, 05, 00, 0e, 20, 02, 05, 04, 0c, 00, 13, 02, 00, 11, 00, 12, 01, 00, 16, 00, 1b, 02, 01, 0c, 00, 11, 20, 09, 0e, 00, 0c, 00, 11, 09, 00, 12, 02, 0a, 0e, 02, 10, 02, 0a, 05, 03, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_if_let.rs
+Number of expressions: 5
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(4, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 3 operands: lhs = Counter(0), rhs = Expression(4, Add)
+- expression 4 operands: lhs = Counter(1), rhs = Counter(2)
+Number of file 0 mappings: 11
+- Code(Counter(0)) at (prev + 42, 1) to (start + 0, 59)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 4, 12) to (start + 0, 19)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 17) to (start + 0, 18)
+    = (c0 - c1)
+- Code(Counter(0)) at (prev + 0, 22) to (start + 0, 27)
+- Code(Expression(0, Sub)) at (prev + 1, 12) to (start + 0, 17)
+    = (c0 - c1)
+- Branch { true: Counter(2), false: Expression(3, Sub) } at (prev + 0, 12) to (start + 0, 17)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- Code(Counter(2)) at (prev + 0, 18) to (start + 2, 10)
+- Code(Expression(3, Sub)) at (prev + 2, 16) to (start + 2, 10)
+    = (c0 - (c1 + c2))
+- Code(Counter(1)) at (prev + 3, 12) to (start + 2, 6)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+
+Function name: mcdc_if_let::if_let_with_boolean_or
+Raw bytes (85): 0x[01, 01, 05, 01, 05, 01, 0b, 05, 0d, 01, 09, 01, 09, 0d, 01, 54, 01, 00, 3e, 01, 01, 05, 00, 0e, 01, 04, 09, 00, 12, 01, 00, 15, 00, 1a, 20, 05, 02, 00, 15, 00, 24, 01, 00, 1b, 00, 22, 02, 00, 28, 00, 30, 20, 0d, 06, 00, 28, 00, 30, 01, 01, 08, 00, 11, 20, 09, 12, 00, 08, 00, 11, 09, 00, 12, 02, 06, 12, 02, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_if_let.rs
+Number of expressions: 5
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(2, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(3)
+- expression 3 operands: lhs = Counter(0), rhs = Counter(2)
+- expression 4 operands: lhs = Counter(0), rhs = Counter(2)
+Number of file 0 mappings: 13
+- Code(Counter(0)) at (prev + 84, 1) to (start + 0, 62)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 4, 9) to (start + 0, 18)
+- Code(Counter(0)) at (prev + 0, 21) to (start + 0, 26)
+- Branch { true: Counter(1), false: Expression(0, Sub) } at (prev + 0, 21) to (start + 0, 36)
+    true  = c1
+    false = (c0 - c1)
+- Code(Counter(0)) at (prev + 0, 27) to (start + 0, 34)
+- Code(Expression(0, Sub)) at (prev + 0, 40) to (start + 0, 48)
+    = (c0 - c1)
+- Branch { true: Counter(3), false: Expression(1, Sub) } at (prev + 0, 40) to (start + 0, 48)
+    true  = c3
+    false = (c0 - (c1 + c3))
+- Code(Counter(0)) at (prev + 1, 8) to (start + 0, 17)
+- Branch { true: Counter(2), false: Expression(4, Sub) } at (prev + 0, 8) to (start + 0, 17)
+    true  = c2
+    false = (c0 - c2)
+- Code(Counter(2)) at (prev + 0, 18) to (start + 2, 6)
+- Code(Expression(4, Sub)) at (prev + 2, 12) to (start + 2, 6)
+    = (c0 - c2)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c3
+
+Function name: mcdc_if_let::nested_if_let
+Raw bytes (82): 0x[01, 01, 07, 01, 05, 01, 1b, 05, 09, 01, 1b, 05, 09, 01, 1b, 05, 09, 0c, 01, 45, 01, 00, 2d, 01, 01, 05, 00, 0e, 20, 02, 05, 03, 0c, 00, 17, 02, 00, 11, 00, 16, 01, 00, 1a, 00, 1f, 20, 16, 09, 01, 10, 00, 17, 16, 00, 15, 00, 16, 02, 00, 1a, 00, 1f, 16, 00, 20, 02, 0a, 09, 02, 10, 02, 0a, 05, 03, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_if_let.rs
+Number of expressions: 7
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(6, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 3 operands: lhs = Counter(0), rhs = Expression(6, Add)
+- expression 4 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 5 operands: lhs = Counter(0), rhs = Expression(6, Add)
+- expression 6 operands: lhs = Counter(1), rhs = Counter(2)
+Number of file 0 mappings: 12
+- Code(Counter(0)) at (prev + 69, 1) to (start + 0, 45)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 3, 12) to (start + 0, 23)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 17) to (start + 0, 22)
+    = (c0 - c1)
+- Code(Counter(0)) at (prev + 0, 26) to (start + 0, 31)
+- Branch { true: Expression(5, Sub), false: Counter(2) } at (prev + 1, 16) to (start + 0, 23)
+    true  = (c0 - (c1 + c2))
+    false = c2
+- Code(Expression(5, Sub)) at (prev + 0, 21) to (start + 0, 22)
+    = (c0 - (c1 + c2))
+- Code(Expression(0, Sub)) at (prev + 0, 26) to (start + 0, 31)
+    = (c0 - c1)
+- Code(Expression(5, Sub)) at (prev + 0, 32) to (start + 2, 10)
+    = (c0 - (c1 + c2))
+- Code(Counter(2)) at (prev + 2, 16) to (start + 2, 10)
+- Code(Counter(1)) at (prev + 3, 12) to (start + 2, 6)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+

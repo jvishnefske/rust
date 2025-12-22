@@ -1,0 +1,184 @@
+Function name: mcdc_negation::complex_negation
+Raw bytes (122): 0x[01, 01, 08, 01, 05, 01, 13, 05, 09, 01, 13, 05, 09, 01, 09, 01, 1f, 0d, 09, 10, 01, 41, 01, 00, 37, 01, 01, 05, 00, 0e, 01, 03, 09, 00, 0f, 28, 00, 02, 00, 12, 00, 21, 01, 00, 13, 00, 15, 20, 02, 05, 00, 13, 00, 15, 30, 02, 05, 01, ff, ff, ff, ff, 0f, 00, 00, 14, 00, 15, 02, 00, 19, 00, 1a, 20, 09, 0e, 00, 19, 00, 1a, 30, 09, 0e, 02, 00, 01, 00, 19, 00, 1a, 16, 00, 1f, 00, 21, 20, 0d, 1a, 00, 1f, 00, 21, 01, 01, 05, 00, 0e, 01, 00, 0f, 00, 15, 01, 01, 05, 00, 0b, 01, 01, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_negation.rs
+Number of expressions: 8
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(4, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 3 operands: lhs = Counter(0), rhs = Expression(4, Add)
+- expression 4 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 5 operands: lhs = Counter(0), rhs = Counter(2)
+- expression 6 operands: lhs = Counter(0), rhs = Expression(7, Add)
+- expression 7 operands: lhs = Counter(3), rhs = Counter(2)
+Number of file 0 mappings: 16
+- Code(Counter(0)) at (prev + 65, 1) to (start + 0, 55)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 3, 9) to (start + 0, 15)
+- MCDCDecision { bitmap_idx: 0, conditions_num: 2 } at (prev + 0, 18) to (start + 0, 33)
+- Code(Counter(0)) at (prev + 0, 19) to (start + 0, 21)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 0, 19) to (start + 0, 21)
+    true  = (c0 - c1)
+    false = c1
+- MCDCBranch { true: Expression(0, Sub), false: Counter(1), condition_id: 1, true_next_id: 4294967295, false_next_id: 0 } at (prev + 0, 20) to (start + 0, 21)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 25) to (start + 0, 26)
+    = (c0 - c1)
+- Branch { true: Counter(2), false: Expression(3, Sub) } at (prev + 0, 25) to (start + 0, 26)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- MCDCBranch { true: Counter(2), false: Expression(3, Sub), condition_id: 2, true_next_id: 0, false_next_id: 1 } at (prev + 0, 25) to (start + 0, 26)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- Code(Expression(5, Sub)) at (prev + 0, 31) to (start + 0, 33)
+    = (c0 - c2)
+- Branch { true: Counter(3), false: Expression(6, Sub) } at (prev + 0, 31) to (start + 0, 33)
+    true  = c3
+    false = (c0 - (c3 + c2))
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 0, 15) to (start + 0, 21)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 11)
+- Code(Counter(0)) at (prev + 1, 1) to (start + 0, 2)
+Highest counter ID seen: c3
+
+Function name: mcdc_negation::double_negation
+Raw bytes (67): 0x[01, 01, 02, 01, 05, 05, 09, 0b, 01, 2e, 01, 00, 2d, 01, 01, 05, 00, 0e, 01, 04, 09, 00, 0f, 01, 00, 12, 00, 15, 20, 05, 02, 00, 12, 00, 15, 05, 00, 19, 00, 1a, 20, 09, 06, 00, 19, 00, 1a, 01, 01, 05, 00, 0e, 01, 00, 0f, 00, 15, 01, 01, 05, 00, 0b, 01, 01, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_negation.rs
+Number of expressions: 2
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(1), rhs = Counter(2)
+Number of file 0 mappings: 11
+- Code(Counter(0)) at (prev + 46, 1) to (start + 0, 45)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 4, 9) to (start + 0, 15)
+- Code(Counter(0)) at (prev + 0, 18) to (start + 0, 21)
+- Branch { true: Counter(1), false: Expression(0, Sub) } at (prev + 0, 18) to (start + 0, 21)
+    true  = c1
+    false = (c0 - c1)
+- Code(Counter(1)) at (prev + 0, 25) to (start + 0, 26)
+- Branch { true: Counter(2), false: Expression(1, Sub) } at (prev + 0, 25) to (start + 0, 26)
+    true  = c2
+    false = (c1 - c2)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 0, 15) to (start + 0, 21)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 11)
+- Code(Counter(0)) at (prev + 1, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+
+Function name: mcdc_negation::negation_and
+Raw bytes (69): 0x[01, 01, 03, 01, 05, 01, 0b, 05, 09, 0b, 01, 16, 01, 00, 2a, 01, 01, 05, 00, 0e, 01, 09, 09, 00, 0f, 01, 00, 12, 00, 14, 20, 02, 05, 00, 12, 00, 14, 02, 00, 18, 00, 19, 20, 09, 06, 00, 18, 00, 19, 01, 01, 05, 00, 0e, 01, 00, 0f, 00, 15, 01, 01, 05, 00, 0b, 01, 01, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_negation.rs
+Number of expressions: 3
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(2, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(2)
+Number of file 0 mappings: 11
+- Code(Counter(0)) at (prev + 22, 1) to (start + 0, 42)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 9, 9) to (start + 0, 15)
+- Code(Counter(0)) at (prev + 0, 18) to (start + 0, 20)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 0, 18) to (start + 0, 20)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 24) to (start + 0, 25)
+    = (c0 - c1)
+- Branch { true: Counter(2), false: Expression(1, Sub) } at (prev + 0, 24) to (start + 0, 25)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 0, 15) to (start + 0, 21)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 11)
+- Code(Counter(0)) at (prev + 1, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+
+Function name: mcdc_negation::negation_both
+Raw bytes (69): 0x[01, 01, 03, 01, 05, 01, 0b, 05, 09, 0b, 01, 38, 01, 00, 2b, 01, 01, 05, 00, 0e, 01, 03, 09, 00, 0f, 01, 00, 12, 00, 14, 20, 02, 05, 00, 12, 00, 14, 02, 00, 18, 00, 1a, 20, 09, 06, 00, 18, 00, 1a, 01, 01, 05, 00, 0e, 01, 00, 0f, 00, 15, 01, 01, 05, 00, 0b, 01, 01, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_negation.rs
+Number of expressions: 3
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(2, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(2)
+Number of file 0 mappings: 11
+- Code(Counter(0)) at (prev + 56, 1) to (start + 0, 43)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 3, 9) to (start + 0, 15)
+- Code(Counter(0)) at (prev + 0, 18) to (start + 0, 20)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 0, 18) to (start + 0, 20)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 24) to (start + 0, 26)
+    = (c0 - c1)
+- Branch { true: Counter(2), false: Expression(1, Sub) } at (prev + 0, 24) to (start + 0, 26)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 0, 15) to (start + 0, 21)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 11)
+- Code(Counter(0)) at (prev + 1, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+
+Function name: mcdc_negation::negation_in_if
+Raw bytes (96): 0x[01, 01, 06, 01, 05, 01, 13, 05, 09, 01, 13, 05, 09, 01, 09, 0c, 01, 4a, 01, 00, 24, 01, 01, 05, 00, 0e, 01, 02, 08, 00, 0a, 28, 00, 02, 00, 08, 00, 0f, 20, 02, 05, 00, 08, 00, 0a, 30, 02, 05, 01, ff, ff, ff, ff, 0f, 00, 00, 09, 00, 0a, 02, 00, 0e, 00, 0f, 20, 09, 0e, 00, 0e, 00, 0f, 30, 09, 0e, 02, 00, 01, 00, 0e, 00, 0f, 09, 00, 10, 02, 06, 16, 02, 0c, 02, 06, 01, 03, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_negation.rs
+Number of expressions: 6
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(0), rhs = Expression(4, Add)
+- expression 2 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 3 operands: lhs = Counter(0), rhs = Expression(4, Add)
+- expression 4 operands: lhs = Counter(1), rhs = Counter(2)
+- expression 5 operands: lhs = Counter(0), rhs = Counter(2)
+Number of file 0 mappings: 12
+- Code(Counter(0)) at (prev + 74, 1) to (start + 0, 36)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 2, 8) to (start + 0, 10)
+- MCDCDecision { bitmap_idx: 0, conditions_num: 2 } at (prev + 0, 8) to (start + 0, 15)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 0, 8) to (start + 0, 10)
+    true  = (c0 - c1)
+    false = c1
+- MCDCBranch { true: Expression(0, Sub), false: Counter(1), condition_id: 1, true_next_id: 4294967295, false_next_id: 0 } at (prev + 0, 9) to (start + 0, 10)
+    true  = (c0 - c1)
+    false = c1
+- Code(Expression(0, Sub)) at (prev + 0, 14) to (start + 0, 15)
+    = (c0 - c1)
+- Branch { true: Counter(2), false: Expression(3, Sub) } at (prev + 0, 14) to (start + 0, 15)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- MCDCBranch { true: Counter(2), false: Expression(3, Sub), condition_id: 2, true_next_id: 0, false_next_id: 1 } at (prev + 0, 14) to (start + 0, 15)
+    true  = c2
+    false = (c0 - (c1 + c2))
+- Code(Counter(2)) at (prev + 0, 16) to (start + 2, 6)
+- Code(Expression(5, Sub)) at (prev + 2, 12) to (start + 2, 6)
+    = (c0 - c2)
+- Code(Counter(0)) at (prev + 3, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+
+Function name: mcdc_negation::negation_or
+Raw bytes (67): 0x[01, 01, 02, 01, 05, 05, 09, 0b, 01, 25, 01, 00, 29, 01, 01, 05, 00, 0e, 01, 03, 09, 00, 0f, 01, 00, 12, 00, 14, 20, 02, 05, 00, 12, 00, 14, 05, 00, 18, 00, 19, 20, 09, 06, 00, 18, 00, 19, 01, 01, 05, 00, 0e, 01, 00, 0f, 00, 15, 01, 01, 05, 00, 0b, 01, 01, 01, 00, 02]
+Number of files: 1
+- file 0 => $DIR/mcdc_negation.rs
+Number of expressions: 2
+- expression 0 operands: lhs = Counter(0), rhs = Counter(1)
+- expression 1 operands: lhs = Counter(1), rhs = Counter(2)
+Number of file 0 mappings: 11
+- Code(Counter(0)) at (prev + 37, 1) to (start + 0, 41)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 3, 9) to (start + 0, 15)
+- Code(Counter(0)) at (prev + 0, 18) to (start + 0, 20)
+- Branch { true: Expression(0, Sub), false: Counter(1) } at (prev + 0, 18) to (start + 0, 20)
+    true  = (c0 - c1)
+    false = c1
+- Code(Counter(1)) at (prev + 0, 24) to (start + 0, 25)
+- Branch { true: Counter(2), false: Expression(1, Sub) } at (prev + 0, 24) to (start + 0, 25)
+    true  = c2
+    false = (c1 - c2)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 14)
+- Code(Counter(0)) at (prev + 0, 15) to (start + 0, 21)
+- Code(Counter(0)) at (prev + 1, 5) to (start + 0, 11)
+- Code(Counter(0)) at (prev + 1, 1) to (start + 0, 2)
+Highest counter ID seen: c2
+
