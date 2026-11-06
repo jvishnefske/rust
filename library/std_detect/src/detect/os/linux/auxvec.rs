@@ -128,6 +128,8 @@ fn getauxval(key: usize) -> Result<usize, ()> {
                 any(target_env = "gnu", target_env = "musl", target_env = "ohos"),
             ),
             target_os = "android",
+            // linux-none: std's runtime (linux_none_rt) defines getauxval
+            all(target_os = "linux", target_env = ""),
         ) => {
             let ffi_getauxval: F = libc::getauxval;
         }

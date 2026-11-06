@@ -4,6 +4,14 @@ use alloc::vec::Vec;
 
 mod auxvec;
 
+// linux-none has no libc to read files with, and needs no /proc fallback:
+// getauxval (from std's runtime) always reads the real auxiliary vector.
+#[cfg(all(target_os = "linux", target_env = ""))]
+fn read_file(orig_path: &str) -> Result<Vec<u8>, alloc::string::String> {
+    Err(alloc::format!("Cannot open file at {orig_path}"))
+}
+
+#[cfg(not(all(target_os = "linux", target_env = "")))]
 fn read_file(orig_path: &str) -> Result<Vec<u8>, alloc::string::String> {
     use alloc::format;
 
