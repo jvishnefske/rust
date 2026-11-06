@@ -1,6 +1,6 @@
 //! Files on linux-none: fs/unix.rs for Linux, on `linux_none_rt` syscalls.
 //! Metadata comes from `statx`, directories are read with `getdents64`, and
-//! `canonicalize` asks `/proc/self/fd` (as musl's `realpath` once did).
+//! `canonicalize` resolves symlinks itself, as glibc's `realpath` does.
 
 #![allow(nonstandard_style)]
 
@@ -963,18 +963,112 @@ pub fn lstat(p: &CStr) -> io::Result<FileAttr> {
     statx(sys::AT_FDCWD, p, sys::AT_SYMLINK_NOFOLLOW)
 }
 
+/// `realpath` in userspace, the way glibc (gnulib) does it: walk the path a
+/// component at a time, with `readlink` telling symlinks (whose targets are
+/// spliced in front of what is left) from everything else. It needs no
+/// `/proc`.
 pub fn canonicalize(path: &CStr) -> io::Result<PathBuf> {
-    // Open the path itself (O_PATH: no access to its contents needed) and
-    // ask the kernel what it resolved to.
-    let fd = openat(sys::AT_FDCWD, path, (libc::O_PATH | libc::O_CLOEXEC) as u32, 0)?;
-    let resolved = get_path_from_fd(fd.as_raw_fd()).ok_or_else(|| {
-        io::const_error!(io::ErrorKind::Unsupported, "canonicalize requires /proc to be mounted")
-    })?;
-    // the kernel's name for a file that was deleted meanwhile
-    if resolved.as_os_str().as_bytes().ends_with(b" (deleted)") {
+    // Linux's own limit on symlinks per lookup (and glibc's)
+    const MAX_LINKS: u32 = 40;
+
+    let path = path.to_bytes();
+    if path.is_empty() {
         return Err(io::Error::from_raw_os_error(libc::ENOENT));
     }
-    Ok(resolved)
+    // what is resolved so far: absolute, symlink-free, and with no trailing
+    // slash unless it is "/"
+    let mut out = if path[0] == b'/' {
+        vec![b'/']
+    } else {
+        let cwd = crate::sys::paths::getcwd()?.into_os_string().into_vec();
+        // the kernel's "(unreachable)/..." for a cwd outside our root
+        if cwd.first() != Some(&b'/') {
+            return Err(io::Error::from_raw_os_error(libc::ENOENT));
+        }
+        cwd
+    };
+    // what is still to resolve
+    let mut rest = path.to_vec();
+    let mut pos = 0;
+    let mut links = 0;
+
+    loop {
+        while rest.get(pos) == Some(&b'/') {
+            pos += 1;
+        }
+        if pos == rest.len() {
+            break;
+        }
+        let end = rest[pos..].iter().position(|&b| b == b'/').map_or(rest.len(), |i| pos + i);
+        match &rest[pos..end] {
+            b"." => {}
+            b".." => {
+                // `out` has no symlinks left in it, so ".." is lexical here
+                let parent = out.iter().rposition(|&b| b == b'/').unwrap_or(0);
+                out.truncate(parent.max(1));
+            }
+            name => {
+                let parent_len = out.len();
+                if out.len() > 1 {
+                    out.push(b'/');
+                }
+                out.extend_from_slice(name);
+                out.push(0);
+                let r = readlink(CStr::from_bytes_with_nul(&out).unwrap());
+                out.pop();
+                match r {
+                    Ok(target) => {
+                        links += 1;
+                        if links > MAX_LINKS {
+                            return Err(io::Error::from_raw_os_error(libc::ELOOP));
+                        }
+                        let mut target = target.into_os_string().into_vec();
+                        if target.first() == Some(&b'/') {
+                            out.truncate(1);
+                        } else {
+                            out.truncate(parent_len);
+                        }
+                        target.extend_from_slice(&rest[end..]);
+                        rest = target;
+                        pos = 0;
+                        continue;
+                    }
+                    // not a symlink: then it must be a directory if a
+                    // trailing "/", "/." or a "/.." follows (a further
+                    // name would fail its own lookup with ENOTDIR)
+                    Err(e) if e.raw_os_error() == Some(libc::EINVAL) => {
+                        if suffix_requires_dir(&rest[end..]) {
+                            out.push(0);
+                            let attr = statx(sys::AT_FDCWD, CStr::from_bytes_with_nul(&out).unwrap(), 0);
+                            out.pop();
+                            if !attr?.file_type().is_dir() {
+                                return Err(io::Error::from_raw_os_error(libc::ENOTDIR));
+                            }
+                        }
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+        }
+        pos = end;
+    }
+    Ok(PathBuf::from(OsString::from_vec(out)))
+}
+
+/// Whether what follows a component only makes sense for a directory: a
+/// trailing slash, or ".." coming next (perhaps after some "."s).
+fn suffix_requires_dir(suffix: &[u8]) -> bool {
+    if suffix.is_empty() {
+        return false;
+    }
+    for name in suffix.split(|&b| b == b'/').filter(|n| !n.is_empty()) {
+        match name {
+            b"." => {}
+            b".." => return true,
+            _ => return false,
+        }
+    }
+    true
 }
 
 fn open_from(from: &Path) -> io::Result<(crate::fs::File, crate::fs::Metadata)> {
