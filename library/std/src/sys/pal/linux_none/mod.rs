@@ -19,6 +19,7 @@ use crate::io;
 use crate::sync::atomic::{AtomicBool, Ordering};
 
 pub mod futex;
+pub mod stack_overflow;
 #[path = "../unix/time.rs"]
 pub mod time;
 
@@ -28,6 +29,7 @@ static ON_BROKEN_PIPE_USED: AtomicBool = AtomicBool::new(false);
 pub unsafe fn init(argc: isize, argv: *const *const u8, sigpipe: u8) {
     sanitize_standard_fds();
     reset_sigpipe(sigpipe);
+    unsafe { stack_overflow::init() };
     unsafe { crate::sys::args::init(argc, argv) };
     // libc's `exit` runs the exiting thread's TLS destructors: so does ours
     linux_none_rt::start::set_exit_hook(run_thread_exit);

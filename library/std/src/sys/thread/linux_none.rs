@@ -10,6 +10,10 @@ use crate::thread::ThreadInit;
 use crate::time::Duration;
 use crate::{cmp, io};
 
+// upstream's cgroup CPU quota lookup, which only uses `fs`
+#[path = "unix/cgroups.rs"]
+mod cgroups;
+
 pub const DEFAULT_MIN_STACK_SIZE: usize = 2 * 1024 * 1024;
 
 pub struct Thread {
@@ -37,13 +41,31 @@ impl Thread {
             // SAFETY: we are simply recreating the box that was leaked earlier.
             let init = unsafe { Box::from_raw(data as *mut ThreadInit) };
             let rust_start = init.init();
+            // now that the thread has a name, tell the stack overflow handler
+            crate::sys::pal::stack_overflow::thread_start();
             rust_start();
             crate::sys::pal::run_thread_exit();
+            crate::sys::pal::stack_overflow::thread_exit();
         }
     }
 
     pub fn join(mut self) {
         self.native.take().unwrap().join();
+    }
+
+    /// The `pthread_t` that `JoinHandleExt` hands out: there are no pthreads,
+    /// so this is the address of the runtime's control block for the thread
+    /// (as glibc's `pthread_t` is the address of its `struct pthread`).
+    pub fn id(&self) -> libc::pthread_t {
+        self.native.as_ref().unwrap().as_raw() as libc::pthread_t
+    }
+
+    /// [`id`](Self::id), giving up the handle. Nothing can join through a
+    /// `pthread_t` here, so the thread is detached: the id stays valid while
+    /// the thread runs.
+    pub fn into_id(self) -> libc::pthread_t {
+        // dropping `self` detaches
+        self.id()
     }
 }
 
@@ -56,11 +78,12 @@ impl Drop for Thread {
 }
 
 pub fn available_parallelism() -> io::Result<NonZero<usize>> {
-    // the affinity mask, up to 8192 CPUs
+    // the affinity mask (up to 8192 CPUs), capped by a cgroup CPU quota
+    let quota = cgroups::quota().max(1);
     let mut set = [0u64; 128];
     let n = crate::sys::cvt(unsafe { sys::sched_getaffinity(set.as_mut_ptr().cast(), size_of_val(&set)) })?;
     let count: usize = set[..n / 8].iter().map(|w| w.count_ones() as usize).sum();
-    NonZero::new(count).ok_or(io::Error::UNKNOWN_THREAD_COUNT)
+    NonZero::new(count.min(quota)).ok_or(io::Error::UNKNOWN_THREAD_COUNT)
 }
 
 pub fn current_os_id() -> Option<u64> {
