@@ -4,8 +4,8 @@
 //! platform through `netc`, which elsewhere is libc. Here `netc` is libc's
 //! types and constants plus [`netc`]'s own functions, with libc's signatures
 //! and conventions (`-1` and errno on failure), on `linux_none_rt` syscalls.
-//! Host name lookup knows numeric addresses and `/etc/hosts`: there is no
-//! DNS resolver.
+//! Host name lookup knows numeric addresses and `/etc/hosts`, then asks the
+//! DNS servers in `/etc/resolv.conf` (`linux_none_rt::dns`).
 
 #![allow(dead_code)]
 
@@ -24,6 +24,8 @@ use super::socket_addr_to_c;
 
 #[expect(non_camel_case_types)]
 pub type wrlen_t = libc::size_t;
+
+mod dns;
 
 /// libc's interface to sockets, on raw syscalls.
 pub(crate) mod netc {
@@ -139,9 +141,9 @@ pub(crate) mod netc {
         addr: sockaddr_storage,
     }
 
-    /// `getaddrinfo` for a numeric address or a name in `/etc/hosts`
-    /// (`localhost` resolves even without one); there is no DNS resolver.
-    /// Only `node` and `hints.ai_socktype` are looked at.
+    /// `getaddrinfo` for a numeric address, a name in `/etc/hosts`
+    /// (`localhost` resolves even without one) or else in DNS. Only `node`,
+    /// `hints.ai_family` and `hints.ai_socktype` are looked at.
     pub unsafe fn getaddrinfo(
         node: *const c_char,
         _service: *const c_char,
@@ -152,6 +154,7 @@ pub(crate) mod netc {
 
         let host = unsafe { crate::ffi::CStr::from_ptr(node) }.to_bytes();
         let socktype = unsafe { hints.as_ref() }.map_or(0, |h| h.ai_socktype);
+        let family = unsafe { hints.as_ref() }.map_or(AF_UNSPEC, |h| h.ai_family);
         let numeric = crate::str::from_utf8(host).ok().and_then(|h| h.parse::<IpAddr>().ok());
         let mut addrs: Vec<IpAddr> = match numeric {
             Some(a) => vec![a],
@@ -159,6 +162,13 @@ pub(crate) mod netc {
         };
         if addrs.is_empty() && host.eq_ignore_ascii_case(b"localhost") {
             addrs = vec![IpAddr::V4(Ipv4Addr::LOCALHOST), IpAddr::V6(Ipv6Addr::LOCALHOST)];
+        }
+        addrs.retain(|a| family == AF_UNSPEC || (family == AF_INET) == a.is_ipv4());
+        if addrs.is_empty() && numeric.is_none() {
+            addrs = match super::dns::lookup(host, family) {
+                Ok(addrs) => addrs,
+                Err(e) => return e,
+            };
         }
         if addrs.is_empty() {
             return EAI_NONAME;
@@ -213,7 +223,10 @@ pub(crate) mod netc {
 
     pub fn gai_strerror(err: c_int) -> &'static str {
         match err {
-            EAI_NONAME => "Name does not resolve (no DNS resolver on linux-none)",
+            EAI_NONAME => "Name does not resolve",
+            EAI_AGAIN => "Temporary failure in name resolution",
+            EAI_FAIL => "Non-recoverable failure in name resolution",
+            EAI_SYSTEM => "System error",
             _ => "Unknown error",
         }
     }
@@ -260,6 +273,9 @@ pub fn init() {}
 pub fn cvt_gai(err: c_int) -> io::Result<()> {
     if err == 0 {
         return Ok(());
+    }
+    if err == netc::EAI_SYSTEM {
+        return Err(io::Error::last_os_error());
     }
     let detail = netc::gai_strerror(err);
     Err(io::Error::new(

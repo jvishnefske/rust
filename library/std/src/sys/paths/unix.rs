@@ -465,10 +465,16 @@ pub fn home_dir() -> Option<PathBuf> {
         target_os = "vita",
         target_os = "nuttx",
         all(target_vendor = "apple", not(target_os = "macos")),
-        linux_none, // no passwd database without libc
     ))]
     unsafe fn fallback() -> Option<OsString> {
         None
+    }
+    // getpwuid_r with only the `files` database: no NSS without libc
+    #[cfg(linux_none)]
+    unsafe fn fallback() -> Option<OsString> {
+        let passwd = crate::fs::read("/etc/passwd").ok()?;
+        let dir = linux_none_rt::passwd::home_dir(&passwd, linux_none_rt::sys::getuid())?;
+        Some(OsStringExt::from_vec(dir.to_vec()))
     }
     #[cfg(not(any(
         target_os = "android",
