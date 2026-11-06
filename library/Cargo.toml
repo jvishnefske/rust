@@ -4,6 +4,8 @@ cargo-features = ["profile-rustflags"]
 resolver = "1"
 members = [
   "std",
+  # linux-none: the runtime std is built on (a link to rt/ in the repository)
+  "linux_none_rt",
   "sysroot",
   "coretests",
   "alloctests",
@@ -88,3 +90,5 @@ rustc-std-workspace-std = { path = 'rustc-std-workspace-std' }
 
 # See comments in `library/windows-sys/Cargo.toml` for why this is patched
 windows-sys = { path = 'windows-sys' }
+# linux-none: std's libc, patched to give linux-none musl's types and constants
+libc = { path = '../libc' }

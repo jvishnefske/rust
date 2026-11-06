@@ -4,6 +4,10 @@ mod error;
 
 mod is_terminal {
     cfg_select! {
+        linux_none => {
+            mod linux_none;
+            pub use linux_none::*;
+        }
         any(target_family = "unix", target_os = "wasi") => {
             mod isatty;
             pub use isatty::*;

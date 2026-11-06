@@ -18,7 +18,24 @@ pub fn getcwd() -> io::Result<PathBuf> {
     Ok(PathBuf::from("/"))
 }
 
-#[cfg(not(target_os = "espidf"))]
+#[cfg(linux_none)]
+pub fn getcwd() -> io::Result<PathBuf> {
+    let mut buf = Vec::with_capacity(512);
+    loop {
+        match unsafe { linux_none_rt::sys::getcwd(buf.as_mut_ptr(), buf.capacity()) } {
+            // the length includes the terminating NUL
+            Ok(len) => {
+                unsafe { buf.set_len(len.saturating_sub(1)) };
+                buf.shrink_to_fit();
+                return Ok(PathBuf::from(OsString::from_vec(buf)));
+            }
+            Err(libc::ERANGE) => buf.reserve(buf.capacity() * 2),
+            Err(e) => return Err(io::Error::from_raw_os_error(e)),
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "espidf", linux_none)))]
 pub fn getcwd() -> io::Result<PathBuf> {
     let mut buf = Vec::with_capacity(512);
     loop {
@@ -50,7 +67,12 @@ pub fn chdir(_p: &path::Path) -> io::Result<()> {
     crate::sys::pal::unsupported()
 }
 
-#[cfg(not(target_os = "espidf"))]
+#[cfg(linux_none)]
+pub fn chdir(p: &path::Path) -> io::Result<()> {
+    run_path_with_cstr(p, &|p| cvt(unsafe { linux_none_rt::sys::chdir(p.as_ptr().cast()) }).map(drop))
+}
+
+#[cfg(not(any(target_os = "espidf", linux_none)))]
 pub fn chdir(p: &path::Path) -> io::Result<()> {
     let result = run_path_with_cstr(p, &|p| unsafe { Ok(libc::chdir(p.as_ptr())) })?;
     if result == 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
@@ -443,6 +465,7 @@ pub fn home_dir() -> Option<PathBuf> {
         target_os = "vita",
         target_os = "nuttx",
         all(target_vendor = "apple", not(target_os = "macos")),
+        linux_none, // no passwd database without libc
     ))]
     unsafe fn fallback() -> Option<OsString> {
         None
@@ -457,6 +480,7 @@ pub fn home_dir() -> Option<PathBuf> {
         target_os = "vita",
         target_os = "nuttx",
         all(target_vendor = "apple", not(target_os = "macos")),
+        linux_none,
     )))]
     unsafe fn fallback() -> Option<OsString> {
         let amt = match libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) {

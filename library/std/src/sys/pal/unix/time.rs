@@ -73,7 +73,9 @@ impl Timespec {
 
     #[allow(dead_code)]
     pub fn now(clock: libc::clockid_t) -> Timespec {
+        #[cfg(not(linux_none))]
         use crate::mem::MaybeUninit;
+        #[cfg(not(linux_none))]
         use crate::sys::cvt;
 
         // Try to use 64-bit time in preparation for Y2038.
@@ -103,10 +105,19 @@ impl Timespec {
             }
         }
 
-        let mut t = MaybeUninit::uninit();
-        cvt(unsafe { libc::clock_gettime(clock, t.as_mut_ptr()) }).unwrap();
-        let t = unsafe { t.assume_init() };
-        Timespec::new(t.tv_sec as i64, t.tv_nsec as i64).unwrap()
+        #[cfg(linux_none)]
+        {
+            let t = linux_none_rt::sys::clock_gettime(clock as usize);
+            Timespec::new(t.sec, t.nsec).unwrap()
+        }
+
+        #[cfg(not(linux_none))]
+        {
+            let mut t = MaybeUninit::uninit();
+            cvt(unsafe { libc::clock_gettime(clock, t.as_mut_ptr()) }).unwrap();
+            let t = unsafe { t.assume_init() };
+            Timespec::new(t.tv_sec as i64, t.tv_nsec as i64).unwrap()
+        }
     }
 
     pub fn sub_timespec(&self, other: &Timespec) -> Result<Duration, Duration> {

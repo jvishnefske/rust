@@ -4,7 +4,11 @@ use crate::ffi::OsStr;
 use crate::os::net::linux_ext;
 use crate::os::unix::ffi::OsStrExt;
 use crate::path::Path;
+#[cfg(not(linux_none))]
 use crate::sys::cvt;
+// linux-none: no libc, but a socket layer with its signatures
+#[cfg(linux_none)]
+use crate::sys::net::{cvt, netc as libc};
 use crate::{fmt, io, mem, ptr};
 
 // FIXME(#43348): Make libc adapt #[doc(cfg(...))] so we don't need these fake definitions here?

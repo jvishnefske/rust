@@ -64,6 +64,10 @@ unsafe fn realloc_fallback(ptr: *mut u8, old_layout: Layout, new_size: usize) ->
 }
 
 cfg_select! {
+    linux_none => {
+        mod linux_none;
+        use linux_none as imp;
+    }
     any(target_family = "unix", target_os = "wasi", target_os = "teeos", target_os = "trusty") => {
         mod unix;
         use unix as imp;

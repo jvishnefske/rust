@@ -70,6 +70,11 @@ cfg_select! {
 ))]
 pub(crate) mod destructors {
     cfg_select! {
+        linux_none => {
+            mod list;
+            pub(super) use list::register;
+            pub(crate) use list::run;
+        }
         any(
             target_os = "linux",
             target_os = "android",
@@ -126,6 +131,11 @@ pub(crate) mod guard {
                 use crate::rt::thread_cleanup;
             }
         }
+        linux_none => {
+            // `std` is the only runtime: a thread runs the destructor list
+            // itself on its way out (see `sys::pal::run_thread_exit`).
+            pub(crate) fn enable() {}
+        }
         any(target_os = "hermit", target_os = "xous") => {
             // `std` is the only runtime, so it just calls the destructor functions
             // itself when the time comes.
@@ -150,6 +160,7 @@ pub(crate) mod guard {
 /// with a pointer which we can get and set to store our data.
 pub(crate) mod key {
     cfg_select! {
+        linux_none => {}
         any(
             all(not(target_vendor = "apple"), not(target_family = "wasm"), target_family = "unix"),
             all(not(target_thread_local), target_vendor = "apple"),

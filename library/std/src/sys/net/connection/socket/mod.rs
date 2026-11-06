@@ -23,6 +23,10 @@ cfg_select! {
         mod solid;
         pub use solid::*;
     }
+    linux_none => {
+        mod linux_none;
+        pub use linux_none::*;
+    }
     any(target_family = "unix", target_os = "wasi") => {
         mod unix;
         pub use unix::*;

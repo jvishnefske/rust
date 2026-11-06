@@ -12,6 +12,10 @@ pub fn pipe() -> io::Result<(Pipe, Pipe)> {
     // to use the `pipe2` syscall. This was added to Linux in 2.6.27, glibc 2.9
     // and musl 0.9.3, and some other targets also have it.
     cfg_select! {
+        linux_none => unsafe {
+            fds = cvt(linux_none_rt::sys::pipe2(libc::O_CLOEXEC as u32))?;
+            Ok((Pipe::from_raw_fd(fds[0]), Pipe::from_raw_fd(fds[1])))
+        },
         any(
             target_os = "android",
             target_os = "dragonfly",

@@ -39,7 +39,10 @@ pub(super) use self::impl_linux::peer_cred;
 
 #[cfg(any(target_os = "linux", target_os = "android", target_os = "cygwin"))]
 mod impl_linux {
+    #[cfg(not(linux_none))]
     use libc::{SO_PEERCRED, SOL_SOCKET, c_void, getsockopt, socklen_t, ucred};
+    #[cfg(linux_none)]
+    use crate::sys::net::netc::{SO_PEERCRED, SOL_SOCKET, c_void, getsockopt, socklen_t, ucred};
 
     use super::UCred;
     use crate::io;

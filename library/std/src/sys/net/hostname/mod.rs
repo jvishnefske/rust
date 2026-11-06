@@ -1,4 +1,8 @@
 cfg_select! {
+    linux_none => {
+        mod linux_none;
+        pub use linux_none::hostname;
+    }
     all(target_family = "unix", not(target_os = "espidf")) => {
         mod unix;
         pub use unix::hostname;

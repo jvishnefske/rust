@@ -55,6 +55,9 @@ cfg_select! {
                     // Pause until the process exits.
                     loop {
                         // Safety: libc::pause is safe to call.
+                        #[cfg(linux_none)]
+                        linux_none_rt::sys::pause();
+                        #[cfg(not(linux_none))]
                         unsafe {
                             libc::pause();
                         }
@@ -94,6 +97,10 @@ cfg_select! {
 pub fn exit(code: i32) -> ! {
     cfg_select! {
         target_os = "hermit" => unsafe { hermit_abi::exit(code) },
+        linux_none => {
+            unique_thread_exit();
+            linux_none_rt::start::exit(code)
+        },
         target_os = "linux" => unsafe {
             unique_thread_exit();
             libc::exit(code)

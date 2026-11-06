@@ -1,4 +1,8 @@
 cfg_select! {
+    linux_none => {
+        mod linux_none;
+        pub use linux_none::*;
+    }
     target_os = "hermit" => {
         mod hermit;
         pub use hermit::*;

@@ -43,7 +43,12 @@ use crate::net::Shutdown;
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use crate::path::Path;
 use crate::sys::net::Socket;
-use crate::sys::{AsInner, FromInner, cvt};
+use crate::sys::{AsInner, FromInner};
+#[cfg(not(linux_none))]
+use crate::sys::cvt;
+// linux-none: no libc, but a socket layer with its signatures
+#[cfg(linux_none)]
+use crate::sys::net::{cvt, netc as libc};
 use crate::time::Duration;
 
 /// A Unix stream socket.

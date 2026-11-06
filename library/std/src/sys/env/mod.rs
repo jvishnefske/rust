@@ -15,6 +15,10 @@
 mod common;
 
 cfg_select! {
+    linux_none => {
+        mod linux_none;
+        pub use linux_none::*;
+    }
     target_family = "unix" => {
         mod unix;
         pub use unix::*;

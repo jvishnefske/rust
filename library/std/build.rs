@@ -9,6 +9,12 @@ fn main() {
     let target_env = env::var("CARGO_CFG_TARGET_ENV").expect("CARGO_CFG_TARGET_ENV was not set");
 
     println!("cargo:rustc-check-cfg=cfg(netbsd10)");
+
+    // *-unknown-linux-none: the std backend in sys/pal/linux_none, on linux_none_rt
+    println!("cargo:rustc-check-cfg=cfg(linux_none)");
+    if target_os == "linux" && target_env.is_empty() {
+        println!("cargo:rustc-cfg=linux_none");
+    }
     if target_os == "netbsd" && env::var("RUSTC_STD_NETBSD10").is_ok() {
         println!("cargo:rustc-cfg=netbsd10");
     }

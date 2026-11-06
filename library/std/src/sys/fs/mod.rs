@@ -6,6 +6,15 @@ use crate::path::{Path, PathBuf};
 pub mod common;
 
 cfg_select! {
+    linux_none => {
+        mod linux_none;
+        use linux_none as imp;
+        pub(super) use linux_none::CachedFileMetadata;
+        pub(crate) use linux_none::debug_assert_fd_is_open;
+        pub use linux_none::{chown, chroot, fchown, lchown, mkfifo};
+
+        use crate::sys::helpers::run_path_with_cstr as with_native_path;
+    }
     any(target_family = "unix", target_os = "wasi") => {
         mod unix;
         use unix as imp;

@@ -1,5 +1,9 @@
 cfg_select! {
     // Tier 1
+    linux_none => {
+        mod linux_none;
+        pub use linux_none::{fill_bytes, hashmap_random_keys};
+    }
     any(target_os = "linux", target_os = "android") => {
         mod linux;
         pub use linux::{fill_bytes, hashmap_random_keys};

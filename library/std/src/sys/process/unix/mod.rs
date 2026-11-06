@@ -24,17 +24,23 @@ cfg_select! {
         use unsupported as imp;
         pub use unsupported::output;
     }
+    linux_none => {
+        mod linux_none;
+        use linux_none as imp;
+    }
     _ => {
         mod unix;
         use unix as imp;
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(linux_none)))]
 mod pidfd;
 
 pub use imp::{ExitStatus, ExitStatusError, Process};
-#[cfg(target_os = "linux")]
+#[cfg(linux_none)]
+pub use linux_none::PidFd;
+#[cfg(all(target_os = "linux", not(linux_none)))]
 pub use pidfd::PidFd;
 
 pub use self::common::{

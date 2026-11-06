@@ -215,6 +215,9 @@ fn replace_stdio_fd(this: BorrowedFd<'_>, other: OwnedFd) -> io::Result<()> {
             cvt(unsafe { libc::__wasilibc_fd_renumber(other.as_raw_fd(), this.as_raw_fd()) })
                 .map(|_| ())
         }
+        linux_none => {
+            cvt(linux_none_rt::sys::dup3(other.as_raw_fd(), this.as_raw_fd(), 0)).map(|_| ())
+        }
         not(any(
             all(target_arch = "wasm32", not(target_os = "emscripten")),
             target_os = "hermit",

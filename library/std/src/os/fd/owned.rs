@@ -107,7 +107,8 @@ impl BorrowedFd<'_> {
         all(target_arch = "wasm32", not(target_os = "emscripten")),
         target_os = "hermit",
         target_os = "trusty",
-        target_os = "motor"
+        target_os = "motor",
+        linux_none
     )))]
     #[stable(feature = "io_safety", since = "1.63.0")]
     pub fn try_clone_to_owned(&self) -> io::Result<OwnedFd> {
@@ -139,6 +140,17 @@ impl BorrowedFd<'_> {
     #[stable(feature = "io_safety", since = "1.63.0")]
     pub fn try_clone_to_owned(&self) -> io::Result<OwnedFd> {
         Err(io::Error::UNSUPPORTED_PLATFORM)
+    }
+
+    /// Creates a new `OwnedFd` instance that shares the same underlying file
+    /// description as the existing `BorrowedFd` instance.
+    #[cfg(linux_none)]
+    #[stable(feature = "io_safety", since = "1.63.0")]
+    pub fn try_clone_to_owned(&self) -> io::Result<OwnedFd> {
+        use linux_none_rt::sys;
+        // Avoid using file descriptors below 3 as they are used for stdio
+        let fd = cvt(sys::fcntl(self.as_raw_fd(), sys::F_DUPFD_CLOEXEC, 3))?;
+        Ok(unsafe { OwnedFd::from_raw_fd(fd as RawFd) })
     }
 
     /// Creates a new `OwnedFd` instance that shares the same underlying file
@@ -212,12 +224,17 @@ impl Drop for OwnedFd {
             // not-POSIX-compliant implementation, the consequences could be really bad since we may
             // close the wrong FD. Helpful link to an epic discussion by POSIX workgroup that led to
             // the latest POSIX wording: http://austingroupbugs.net/view.php?id=529
-            #[cfg(not(target_os = "hermit"))]
+            #[cfg(not(any(target_os = "hermit", linux_none)))]
             {
                 #[cfg(unix)]
                 crate::sys::fs::debug_assert_fd_is_open(self.fd.as_inner());
 
                 let _ = libc::close(self.fd.as_inner());
+            }
+            #[cfg(linux_none)]
+            {
+                crate::sys::fs::debug_assert_fd_is_open(self.fd.as_inner());
+                let _ = linux_none_rt::sys::close(self.fd.as_inner());
             }
             #[cfg(target_os = "hermit")]
             let _ = hermit_abi::close(self.fd.as_inner());

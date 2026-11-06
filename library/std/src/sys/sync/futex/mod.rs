@@ -1,4 +1,7 @@
 cfg_select! {
+    linux_none => {
+        pub use crate::sys::pal::futex::*;
+    }
     any(
         target_os = "linux",
         target_os = "android",

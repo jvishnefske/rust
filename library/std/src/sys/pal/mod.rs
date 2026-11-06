@@ -4,6 +4,10 @@
 #![allow(missing_debug_implementations)]
 
 cfg_select! {
+    linux_none => {
+        mod linux_none;
+        pub use self::linux_none::*;
+    }
     unix => {
         mod unix;
         pub use self::unix::*;

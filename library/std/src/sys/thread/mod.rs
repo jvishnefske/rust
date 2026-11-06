@@ -48,6 +48,10 @@ cfg_select! {
         mod unsupported;
         pub use unsupported::{DEFAULT_MIN_STACK_SIZE, Thread, current_os_id, set_name, yield_now};
     }
+    linux_none => {
+        mod linux_none;
+        pub use linux_none::*;
+    }
     any(target_family = "unix", target_os = "wasi") => {
         mod unix;
         #[cfg(not(any(

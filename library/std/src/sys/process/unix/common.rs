@@ -655,7 +655,10 @@ pub fn read_output(
     fds[1].events = libc::POLLIN;
     loop {
         // wait for either pipe to become readable using `poll`
+        #[cfg(not(linux_none))]
         cvt_r(|| unsafe { libc::poll(fds.as_mut_ptr(), 2, -1) })?;
+        #[cfg(linux_none)]
+        cvt_r(|| unsafe { linux_none_rt::sys::ppoll(fds.as_mut_ptr().cast(), 2, crate::ptr::null()) })?;
 
         if fds[0].revents != 0 && read(&out, stdout)? {
             err.set_nonblocking(false)?;
@@ -688,10 +691,15 @@ pub fn read_output(
     }
 }
 
+#[cfg(not(linux_none))]
 pub fn getpid() -> u32 {
     unsafe { libc::getpid() as u32 }
 }
 
+#[cfg(not(linux_none))]
 pub fn getppid() -> u32 {
     unsafe { libc::getppid() as u32 }
 }
+
+#[cfg(linux_none)]
+pub use linux_none_rt::sys::{getpid, getppid};

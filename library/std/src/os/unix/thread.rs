@@ -6,7 +6,9 @@
 
 #[allow(deprecated)]
 use crate::os::unix::raw::pthread_t;
+#[cfg(not(linux_none))]
 use crate::sys::{AsInner, IntoInner};
+#[cfg(not(linux_none))]
 use crate::thread::JoinHandle;
 
 #[stable(feature = "thread_extensions", since = "1.9.0")]
@@ -29,6 +31,8 @@ pub trait JoinHandleExt {
     fn into_pthread_t(self) -> RawPthread;
 }
 
+// linux-none has no pthreads to hand out
+#[cfg(not(linux_none))]
 #[stable(feature = "thread_extensions", since = "1.9.0")]
 impl<T> JoinHandleExt for JoinHandle<T> {
     // This is an int2ptr cast on some platforms (e.g., *-musl) where RawPthread
