@@ -42,7 +42,7 @@
 //!   progress, they can hit a performance cliff.
 //! * complexity
 
-#[cfg(not(any(all(target_os = "linux", target_env = "gnu"), target_os = "hurd")))]
+#[cfg(not(any(all(target_os = "linux", target_env = "gnu"), target_os = "hurd", linux_none)))]
 use libc::sendfile as sendfile64;
 #[cfg(any(all(target_os = "linux", target_env = "gnu"), target_os = "hurd"))]
 use libc::sendfile64;
@@ -62,9 +62,13 @@ use crate::os::unix::net::UnixStream;
 use crate::process::{ChildStderr, ChildStdin, ChildStdout};
 use crate::ptr;
 use crate::sync::atomic::{Atomic, AtomicBool, AtomicU8, Ordering};
+#[cfg(not(linux_none))]
 use crate::sys::cvt;
 use crate::sys::fs::CachedFileMetadata;
+#[cfg(not(linux_none))]
 use crate::sys::weak::syscall;
+#[cfg(linux_none)]
+use super::linux_none::{copy_file_range, cvt, sendfile64, splice};
 
 #[cfg(test)]
 mod tests;
@@ -692,6 +696,7 @@ fn copy_regular_files(reader: RawFd, writer: RawFd, max_len: u64) -> CopyResult 
         _ => true,
     };
 
+    #[cfg(not(linux_none))]
     syscall!(
         fn copy_file_range(
             fd_in: libc::c_int,
@@ -826,7 +831,7 @@ fn sendfile_splice(mode: SpliceMode, reader: RawFd, writer: RawFd, len: u64) -> 
         ) -> libc::ssize_t;
     );
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", not(linux_none)))]
     use libc::splice;
 
     match mode {
