@@ -128,7 +128,8 @@ pub mod full_availability {
 ///   - <https://github.com/rust-lang/rust/issues/114479>
 ///   - but exclude UEFI since it is a soft-float target
 ///     - <https://github.com/rust-lang/rust/issues/128533>
-/// - All unix targets (linux, macos, freebsd, android, etc)
+/// - All unix targets (linux, macos, freebsd, android, etc), except
+///   linux-none, which has no system `libm`
 /// - wasm with known target_os
 #[cfg(not(any(
     all(
@@ -136,7 +137,7 @@ pub mod full_availability {
         not(target_feature = "sse2"),
         not(target_os = "uefi"),
     ),
-    unix,
+    all(unix, not(all(target_os = "linux", target_env = ""))),
     all(target_family = "wasm", not(target_os = "unknown"))
 )))]
 pub mod partial_availability {
