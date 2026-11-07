@@ -52,6 +52,14 @@ pub struct ZeroedMmap {
 #[cfg(all(target_pointer_width = "64", unix))]
 impl ZeroedMmap {
     pub fn new(len: usize) -> ZeroedMmap {
+        #[cfg(linux_none)]
+        let ptr = {
+            use linux_none_rt::sys;
+            let flags = sys::MAP_PRIVATE | sys::MAP_ANONYMOUS;
+            let r = unsafe { sys::mmap(0, len, sys::PROT_READ, flags, -1, 0) };
+            crate::ptr::with_exposed_provenance_mut(r.unwrap_or(usize::MAX))
+        };
+        #[cfg(not(linux_none))]
         let ptr = unsafe {
             libc::mmap(
                 crate::ptr::null_mut(),
@@ -81,6 +89,9 @@ impl crate::ops::Deref for ZeroedMmap {
 impl Drop for ZeroedMmap {
     fn drop(&mut self) {
         // SAFETY: `ptr`/`len` come from the `mmap` call above and are unmapped once.
+        #[cfg(linux_none)]
+        let _ = unsafe { linux_none_rt::sys::munmap(self.ptr.expose_provenance(), self.len) };
+        #[cfg(not(linux_none))]
         unsafe {
             libc::munmap(self.ptr, self.len);
         }

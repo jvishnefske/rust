@@ -20,7 +20,12 @@ fn test_command_pidfd() {
         assert!(child.pidfd().is_ok());
     }
     if let Ok(pidfd) = child.pidfd() {
+        #[cfg(not(linux_none))]
         let flags = super::cvt(unsafe { libc::fcntl(pidfd.as_raw_fd(), libc::F_GETFD) }).unwrap();
+        #[cfg(linux_none)]
+        let flags =
+            super::cvt(linux_none_rt::sys::fcntl(pidfd.as_raw_fd(), libc::F_GETFD as u32, 0))
+                .unwrap() as libc::c_int;
         assert!(flags & libc::FD_CLOEXEC != 0);
     }
     assert!(child.id() > 0 && child.id() < -1i32 as u32);

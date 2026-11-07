@@ -36,6 +36,7 @@ fn test_named_thread() {
     // Note: musl didn't add pthread_getname_np until 1.2.3
     all(target_os = "linux", target_env = "gnu"),
     target_vendor = "apple",
+    linux_none,
 ))]
 #[test]
 fn test_named_thread_truncation() {
@@ -51,9 +52,15 @@ fn test_named_thread_truncation() {
 
         // But the system is limited -- make sure we successfully set a truncation.
         let mut buf = vec![0u8; long_name.len() + 1];
+        #[cfg(not(linux_none))]
         unsafe {
             libc::pthread_getname_np(libc::pthread_self(), buf.as_mut_ptr().cast(), buf.len());
         }
+        // PR_GET_NAME: the calling thread's name, at most 16 bytes with the nul
+        #[cfg(linux_none)]
+        let _ = unsafe {
+            linux_none_rt::sys::prctl(16, buf.as_mut_ptr().expose_provenance(), 0, 0, 0)
+        };
         let cstr = CStr::from_bytes_until_nul(&buf).unwrap();
         assert!(cstr.to_bytes().len() > 0);
         assert!(long_name.as_bytes().starts_with(cstr.to_bytes()));

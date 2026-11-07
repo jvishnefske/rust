@@ -1,7 +1,68 @@
 use super::*;
 use crate::ffi::OsStr;
+#[cfg(not(linux_none))]
 use crate::sys::{cvt, cvt_nz};
 use crate::{mem, ptr};
+#[cfg(linux_none)]
+use self::linux_none::{cvt, cvt_nz, libc, sigaddset, sigemptyset};
+
+/// The libc calls these tests make, on raw syscalls (there is no libc to
+/// link): libc-style return values, -1 with errno set on failure.
+#[cfg(linux_none)]
+mod linux_none {
+    use crate::io;
+
+    pub mod libc {
+        pub use libc::*;
+        use linux_none_rt::sys;
+
+        fn ret(r: sys::SysResult) -> c_int {
+            r.map_or_else(
+                |e| {
+                    crate::sys::io::set_errno(e);
+                    -1
+                },
+                |v| v as c_int,
+            )
+        }
+
+        pub unsafe fn kill(pid: pid_t, sig: c_int) -> c_int {
+            ret(sys::kill(pid, sig as usize))
+        }
+
+        pub unsafe fn getpgid(pid: pid_t) -> pid_t {
+            ret(sys::getpgid(pid))
+        }
+
+        pub unsafe fn pthread_sigmask(
+            how: c_int,
+            set: *const sigset_t,
+            old: *mut sigset_t,
+        ) -> c_int {
+            // returns the error number rather than setting errno
+            unsafe { sys::rt_sigprocmask(how as usize, set.cast(), old.cast()) }.err().unwrap_or(0)
+        }
+    }
+
+    pub unsafe fn sigemptyset(set: *mut libc::sigset_t) -> libc::c_int {
+        unsafe { set.write_bytes(0, 1) };
+        0
+    }
+
+    pub unsafe fn sigaddset(set: *mut libc::sigset_t, sig: libc::c_int) -> libc::c_int {
+        let bit = (sig - 1) as usize;
+        unsafe { *set.cast::<u64>() |= 1 << bit };
+        0
+    }
+
+    pub fn cvt(r: libc::c_int) -> io::Result<libc::c_int> {
+        if r == -1 { Err(io::Error::last_os_error()) } else { Ok(r) }
+    }
+
+    pub fn cvt_nz(r: libc::c_int) -> io::Result<()> {
+        if r == 0 { Ok(()) } else { Err(io::Error::from_raw_os_error(r)) }
+    }
+}
 
 macro_rules! t {
     ($e:expr) => {

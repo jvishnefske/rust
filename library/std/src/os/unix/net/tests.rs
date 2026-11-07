@@ -726,6 +726,9 @@ fn test_send_vectored_fds_unix_stream() {
     if let AncillaryData::ScmRights(scm_rights) = ancillary_data_vec.pop().unwrap().unwrap() {
         let fd_vec = Vec::from_iter(scm_rights);
         assert_eq!(fd_vec.len(), 1);
+        #[cfg(linux_none)]
+        let _ = linux_none_rt::sys::close(fd_vec[0]);
+        #[cfg(not(linux_none))]
         unsafe {
             libc::close(fd_vec[0]);
         }
@@ -739,17 +742,28 @@ fn test_send_vectored_fds_unix_stream() {
 #[cfg_attr(target_os = "android", ignore)] // Android SELinux rules prevent creating Unix sockets
 #[cfg_attr(target_os = "cygwin", ignore)] // Cygwin recvmsg doesn't support Unix sockets
 fn test_send_vectored_with_ancillary_to_unix_datagram() {
+    #[cfg(not(linux_none))]
     fn getpid() -> libc::pid_t {
         unsafe { libc::getpid() }
     }
 
+    #[cfg(not(linux_none))]
     fn getuid() -> libc::uid_t {
         unsafe { libc::getuid() }
     }
 
+    #[cfg(not(linux_none))]
     fn getgid() -> libc::gid_t {
         unsafe { libc::getgid() }
     }
+
+    #[cfg(linux_none)]
+    fn getpid() -> libc::pid_t {
+        linux_none_rt::sys::getpid() as libc::pid_t
+    }
+
+    #[cfg(linux_none)]
+    use linux_none_rt::sys::{getgid, getuid};
 
     let dir = tmpdir();
     let path1 = dir.path().join("sock1");
@@ -842,6 +856,9 @@ fn test_send_vectored_with_ancillary_unix_datagram() {
     if let AncillaryData::ScmRights(scm_rights) = ancillary_data_vec.pop().unwrap().unwrap() {
         let fd_vec = Vec::from_iter(scm_rights);
         assert_eq!(fd_vec.len(), 1);
+        #[cfg(linux_none)]
+        let _ = linux_none_rt::sys::close(fd_vec[0]);
+        #[cfg(not(linux_none))]
         unsafe {
             libc::close(fd_vec[0]);
         }

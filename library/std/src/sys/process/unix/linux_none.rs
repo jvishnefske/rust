@@ -567,3 +567,7 @@ mod linux_child_ext {
 #[cfg(test)]
 #[path = "unix/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "pidfd/tests.rs"]
+mod pidfd_tests;
