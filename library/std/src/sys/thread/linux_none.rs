@@ -57,7 +57,7 @@ impl Thread {
     /// so this is the address of the runtime's control block for the thread
     /// (as glibc's `pthread_t` is the address of its `struct pthread`).
     pub fn id(&self) -> libc::pthread_t {
-        self.native.as_ref().unwrap().as_raw() as libc::pthread_t
+        crate::ptr::with_exposed_provenance_mut(self.native.as_ref().unwrap().as_raw())
     }
 
     /// [`id`](Self::id), giving up the handle. Nothing can join through a
@@ -93,7 +93,7 @@ pub fn current_os_id() -> Option<u64> {
 pub fn set_name(name: &CStr) {
     const PR_SET_NAME: usize = 15;
     // the kernel truncates the name to 15 bytes
-    let _ = unsafe { sys::prctl(PR_SET_NAME, name.as_ptr() as usize, 0, 0, 0) };
+    let _ = unsafe { sys::prctl(PR_SET_NAME, name.as_ptr().expose_provenance(), 0, 0, 0) };
 }
 
 pub fn sleep(dur: Duration) {

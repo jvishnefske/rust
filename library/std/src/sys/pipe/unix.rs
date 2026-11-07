@@ -6,6 +6,7 @@ use crate::sys::pal::cvt;
 pub type Pipe = FileDesc;
 
 pub fn pipe() -> io::Result<(Pipe, Pipe)> {
+    #[cfg(not(linux_none))]
     let mut fds = [0; 2];
 
     // The only known way right now to create atomically set the CLOEXEC flag is
@@ -13,7 +14,7 @@ pub fn pipe() -> io::Result<(Pipe, Pipe)> {
     // and musl 0.9.3, and some other targets also have it.
     cfg_select! {
         linux_none => unsafe {
-            fds = cvt(linux_none_rt::sys::pipe2(libc::O_CLOEXEC as u32))?;
+            let fds = cvt(linux_none_rt::sys::pipe2(libc::O_CLOEXEC as u32))?;
             Ok((Pipe::from_raw_fd(fds[0]), Pipe::from_raw_fd(fds[1])))
         },
         any(

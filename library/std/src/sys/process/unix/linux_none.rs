@@ -279,7 +279,8 @@ impl PidFd {
 
     fn get_info(&self, info: &mut libc::pidfd_info) -> io::Result<()> {
         let req = libc::PIDFD_GET_INFO as usize;
-        cvt(unsafe { rsys::ioctl(self.0.as_raw_fd(), req, info as *mut _ as usize) }).map(drop)
+        let arg = (info as *mut libc::pidfd_info).expose_provenance();
+        cvt(unsafe { rsys::ioctl(self.0.as_raw_fd(), req, arg) }).map(drop)
     }
 
     fn exit_for_reaped_child(&self) -> io::Result<ExitStatus> {
@@ -454,18 +455,59 @@ impl From<c_int> for ExitStatus {
     }
 }
 
+/// " (SIGTERM)" for a Linux signal number, as `unix.rs` displays it (empty
+/// if unrecognized).
+fn signal_string(signal: i32) -> &'static str {
+    match signal {
+        libc::SIGHUP => " (SIGHUP)",
+        libc::SIGINT => " (SIGINT)",
+        libc::SIGQUIT => " (SIGQUIT)",
+        libc::SIGILL => " (SIGILL)",
+        libc::SIGTRAP => " (SIGTRAP)",
+        libc::SIGABRT => " (SIGABRT)",
+        libc::SIGBUS => " (SIGBUS)",
+        libc::SIGFPE => " (SIGFPE)",
+        libc::SIGKILL => " (SIGKILL)",
+        libc::SIGUSR1 => " (SIGUSR1)",
+        libc::SIGSEGV => " (SIGSEGV)",
+        libc::SIGUSR2 => " (SIGUSR2)",
+        libc::SIGPIPE => " (SIGPIPE)",
+        libc::SIGALRM => " (SIGALRM)",
+        libc::SIGTERM => " (SIGTERM)",
+        libc::SIGCHLD => " (SIGCHLD)",
+        libc::SIGCONT => " (SIGCONT)",
+        libc::SIGSTOP => " (SIGSTOP)",
+        libc::SIGTSTP => " (SIGTSTP)",
+        libc::SIGTTIN => " (SIGTTIN)",
+        libc::SIGTTOU => " (SIGTTOU)",
+        libc::SIGURG => " (SIGURG)",
+        libc::SIGXCPU => " (SIGXCPU)",
+        libc::SIGXFSZ => " (SIGXFSZ)",
+        libc::SIGVTALRM => " (SIGVTALRM)",
+        libc::SIGPROF => " (SIGPROF)",
+        libc::SIGWINCH => " (SIGWINCH)",
+        libc::SIGIO => " (SIGIO)",
+        libc::SIGSYS => " (SIGSYS)",
+        libc::SIGSTKFLT => " (SIGSTKFLT)",
+        libc::SIGPWR => " (SIGPWR)",
+        _ => "",
+    }
+}
+
 impl fmt::Display for ExitStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(code) = self.code() {
             write!(f, "exit status: {code}")
         } else if let Some(signal) = self.signal() {
+            let signal_string = signal_string(signal);
             if self.core_dumped() {
-                write!(f, "signal: {signal} (core dumped)")
+                write!(f, "signal: {signal}{signal_string} (core dumped)")
             } else {
-                write!(f, "signal: {signal}")
+                write!(f, "signal: {signal}{signal_string}")
             }
         } else if let Some(signal) = self.stopped_signal() {
-            write!(f, "stopped (not terminated) by signal: {signal}")
+            let signal_string = signal_string(signal);
+            write!(f, "stopped (not terminated) by signal: {signal}{signal_string}")
         } else if self.continued() {
             write!(f, "continued (WIFCONTINUED)")
         } else {

@@ -1,17 +1,15 @@
 //! errno on linux-none: there is no libc errno, but `io::Error::last_os_error`
-//! and `set_errno` still need one, so it is a thread-local that the syscall
-//! wrappers' `cvt` records failures in.
+//! and `set_errno` still need one, so it is a thread-local (in the runtime,
+//! shared by every copy of std in the program) that the syscall wrappers'
+//! `cvt` records failures in.
 
 use crate::ffi::c_int;
 use crate::{fmt, io};
 
-#[thread_local]
-static mut ERRNO: c_int = 0;
-
 /// The address of this thread's errno (unique per thread).
 #[inline]
 pub fn errno_location() -> *mut c_int {
-    &raw mut ERRNO
+    linux_none_rt::errno::location()
 }
 
 #[inline]

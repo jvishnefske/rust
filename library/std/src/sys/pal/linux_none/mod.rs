@@ -131,10 +131,12 @@ pub fn abort_internal() -> ! {
     linux_none_rt::start::abort()
 }
 
+#[allow(dead_code)]
 pub fn unsupported<T>() -> io::Result<T> {
     Err(unsupported_err())
 }
 
+#[allow(dead_code)]
 pub fn unsupported_err() -> io::Error {
     io::Error::UNSUPPORTED_PLATFORM
 }

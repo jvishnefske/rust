@@ -5,5 +5,6 @@ pub fn is_terminal(fd: &impl AsFd) -> bool {
     const TCGETS: usize = 0x5401;
     let mut termios = [0u8; 64];
     let fd = fd.as_fd().as_raw_fd();
-    unsafe { linux_none_rt::sys::ioctl(fd, TCGETS, termios.as_mut_ptr() as usize) }.is_ok()
+    let arg = termios.as_mut_ptr().expose_provenance();
+    unsafe { linux_none_rt::sys::ioctl(fd, TCGETS, arg) }.is_ok()
 }

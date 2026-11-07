@@ -141,7 +141,8 @@ impl FileDesc {
 
     pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
         let v = nonblocking as libc::c_int;
-        cvt(unsafe { sys::ioctl(self.as_raw_fd(), libc::FIONBIO as usize, &v as *const _ as usize) })?;
+        let arg = (&raw const v).expose_provenance();
+        cvt(unsafe { sys::ioctl(self.as_raw_fd(), libc::FIONBIO as usize, arg) })?;
         Ok(())
     }
 

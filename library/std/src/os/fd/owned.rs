@@ -211,6 +211,8 @@ impl FromRawFd for OwnedFd {
 #[stable(feature = "io_safety", since = "1.63.0")]
 impl Drop for OwnedFd {
     #[inline]
+    // linux-none closes with a safe call
+    #[cfg_attr(linux_none, allow(unused_unsafe))]
     fn drop(&mut self) {
         unsafe {
             // Note that errors are ignored when closing a file descriptor. According to POSIX 2024,
