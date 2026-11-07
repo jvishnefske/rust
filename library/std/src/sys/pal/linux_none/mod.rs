@@ -30,6 +30,8 @@ pub unsafe fn init(argc: isize, argv: *const *const u8, sigpipe: u8) {
     sanitize_standard_fds();
     reset_sigpipe(sigpipe);
     unsafe { stack_overflow::init() };
+    // there is no dl_iterate_phdr for the unwinder to find unwind tables with
+    let _ = unwind::set_custom_eh_frame_finder(&EH_FRAME_FINDER);
     unsafe { crate::sys::args::init(argc, argv) };
     // libc's `exit` runs the exiting thread's TLS destructors: so does ours
     linux_none_rt::start::set_exit_hook(run_thread_exit);
@@ -70,6 +72,22 @@ fn reset_sigpipe(sigpipe: u8) {
         if unsafe { sys::rt_sigaction(sys::SIGPIPE, &act, crate::ptr::null_mut()) }.is_err() {
             rtabort!("failed to set the SIGPIPE disposition");
         }
+    }
+}
+
+/// Hands the unwinder (the `unwinding` crate) the executable's
+/// `.eh_frame_hdr`, which `PT_GNU_EH_FRAME` locates. A static executable is
+/// the only object with unwind tables.
+struct EhFrameFinder;
+
+static EH_FRAME_FINDER: EhFrameFinder = EhFrameFinder;
+
+// SAFETY: the address is that of the executable's `.eh_frame_hdr`, which
+// stays mapped for the life of the process.
+unsafe impl unwind::EhFrameFinder for EhFrameFinder {
+    fn find(&self, _pc: usize) -> Option<unwind::FrameInfo> {
+        let hdr = linux_none_rt::elf::eh_frame_hdr()?;
+        Some(unwind::FrameInfo { text_base: None, kind: unwind::FrameInfoKind::EhFrameHdr(hdr) })
     }
 }
 

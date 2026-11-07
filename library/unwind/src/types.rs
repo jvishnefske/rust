@@ -22,6 +22,8 @@ pub type _Unwind_Word = *const u8;
 pub const unwinder_private_data_size: usize =
     cfg_select! {
         target_arch = "x86" => 5,
+        // linux-none's unwinder (the unwinding crate) reserves libunwind's 6 words
+        all(target_arch = "x86_64", target_os = "linux", target_env = "") => 6,
         all(target_arch = "x86_64", not(any(target_os = "windows", target_os = "cygwin"))) => 2,
         all(target_arch = "x86_64", any(target_os = "windows", target_os = "cygwin")) => 6,
         all(target_arch = "arm", not(target_vendor = "apple")) => 20,
@@ -56,7 +58,7 @@ pub struct _Unwind_Exception {
 }
 
 // Check the size of _Unwind_Exception against the source of truth when using the unwinding crate.
-#[cfg(target_os = "xous")]
+#[cfg(any(target_os = "xous", all(target_os = "linux", target_env = "")))]
 const _: () = {
     assert!(size_of::<unwinding::abi::UnwindException>() == size_of::<_Unwind_Exception>());
 };
