@@ -135,7 +135,7 @@ cfg_if! {
         pub const TCSETS: Ioctl = u32_cast_ioctl(0x803c7414);
         pub const TCSETSW: Ioctl = u32_cast_ioctl(0x803c7415);
         pub const TCSETSF: Ioctl = u32_cast_ioctl(0x803c7416);
-    } else if #[cfg(target_env = "musl")] {
+    } else if #[cfg(any(target_env = "musl", all(target_os = "linux", target_env = "")))] {
         pub const TCGETS: Ioctl = 0x402c7413;
         pub const TCSETS: Ioctl = u32_cast_ioctl(0x802c7414);
         pub const TCSETSW: Ioctl = u32_cast_ioctl(0x802c7415);
@@ -255,7 +255,7 @@ cfg_if! {
         #[allow(deprecated)]
         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIMIT_NLIMITS: crate::__rlimit_resource_t = RLIM_NLIMITS;
-    } else if #[cfg(target_env = "musl")] {
+    } else if #[cfg(any(target_env = "musl", all(target_os = "linux", target_env = "")))] {
         pub const RLIMIT_CPU: c_int = 0;
         pub const RLIMIT_FSIZE: c_int = 1;
         pub const RLIMIT_DATA: c_int = 2;

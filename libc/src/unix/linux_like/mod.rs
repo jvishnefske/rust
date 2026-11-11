@@ -103,7 +103,7 @@ s! {
         pub tm_zone: *const c_char,
     }
 
-    #[cfg(not(any(target_env = "musl", target_os = "emscripten", target_env = "ohos")))]
+    #[cfg(not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_os = "emscripten", target_env = "ohos")))]
     pub struct sched_param {
         pub sched_priority: c_int,
     }
@@ -258,7 +258,7 @@ cfg_if! {
     if #[cfg(any(
         target_env = "gnu",
         target_os = "android",
-        all(target_env = "musl", musl_v1_2_3)
+        all(any(target_env = "musl", all(target_os = "linux", target_env = "")), musl_v1_2_3)
     ))] {
         s! {
             pub struct statx {
@@ -969,7 +969,7 @@ pub const TCP_MD5SIG: c_int = 14;
 cfg_if! {
     if #[cfg(all(
         target_os = "linux",
-        any(target_env = "gnu", target_env = "musl", target_env = "ohos")
+        any(target_env = "gnu", any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")
     ))] {
         // WARN: deprecated
         pub const TCP_COOKIE_TRANSACTIONS: c_int = 15;
@@ -1637,7 +1637,7 @@ cfg_if! {
     if #[cfg(any(
         target_env = "gnu",
         target_os = "android",
-        all(target_env = "musl", musl_v1_2_3),
+        all(any(target_env = "musl", all(target_os = "linux", target_env = "")), musl_v1_2_3),
         target_os = "l4re"
     ))] {
         pub const AT_STATX_SYNC_TYPE: c_int = 0x6000;
@@ -2084,7 +2084,7 @@ extern "C" {
 // * ulibc doesn't have preadv64/pwritev64
 cfg_if! {
     if #[cfg(not(any(
-        target_env = "musl",
+        any(target_env = "musl", all(target_os = "linux", target_env = "")),
         target_env = "ohos",
         target_os = "emscripten",
     )))] {
@@ -2149,7 +2149,7 @@ cfg_if! {
 cfg_if! {
     if #[cfg(not(any(
         target_env = "uclibc",
-        target_env = "musl",
+        any(target_env = "musl", all(target_os = "linux", target_env = "")),
         target_env = "ohos",
         target_os = "emscripten",
     )))] {
@@ -2197,7 +2197,7 @@ cfg_if! {
     if #[cfg(any(
         target_env = "gnu",
         target_os = "android",
-        all(target_env = "musl", musl_v1_2_3)
+        all(any(target_env = "musl", all(target_os = "linux", target_env = "")), musl_v1_2_3)
     ))] {
         extern "C" {
             pub fn statx(

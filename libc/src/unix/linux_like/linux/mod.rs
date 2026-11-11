@@ -249,9 +249,9 @@ s! {
         __pgrp: crate::pid_t,
         __sd: crate::sigset_t,
         __ss: crate::sigset_t,
-        #[cfg(any(target_env = "musl", target_env = "ohos"))]
+        #[cfg(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"))]
         __prio: c_int,
-        #[cfg(not(any(target_env = "musl", target_env = "ohos")))]
+        #[cfg(not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")))]
         __sp: crate::sched_param,
         __policy: c_int,
         __pad: Padding<[c_int; 16]>,
@@ -572,7 +572,7 @@ s! {
 
     #[cfg_attr(
         any(
-            target_env = "musl",
+            any(target_env = "musl", all(target_os = "linux", target_env = "")),
             target_env = "ohos",
             target_env = "uclibc",
             target_pointer_width = "32"
@@ -581,7 +581,7 @@ s! {
     )]
     #[cfg_attr(
         all(
-            not(target_env = "musl"),
+            not(any(target_env = "musl", all(target_os = "linux", target_env = ""))),
             not(target_env = "ohos"),
             not(target_env = "uclibc"),
             target_pointer_width = "64"
@@ -605,7 +605,7 @@ s! {
         size: [u8; crate::__SIZEOF_PTHREAD_BARRIERATTR_T],
     }
 
-    #[cfg(not(any(target_env = "musl", target_env = "ohos")))]
+    #[cfg(not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")))]
     #[repr(align(8))]
     pub struct fanotify_event_metadata {
         pub event_len: __u32,
@@ -768,28 +768,28 @@ s! {
 
     #[cfg_attr(
         all(
-            any(target_env = "musl", target_env = "ohos"),
+            any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"),
             target_pointer_width = "32"
         ),
         repr(align(4))
     )]
     #[cfg_attr(
         all(
-            any(target_env = "musl", target_env = "ohos"),
+            any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"),
             target_pointer_width = "64"
         ),
         repr(align(8))
     )]
     #[cfg_attr(
         all(
-            not(any(target_env = "musl", target_env = "ohos")),
+            not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")),
             target_arch = "x86"
         ),
         repr(align(4))
     )]
     #[cfg_attr(
         all(
-            not(any(target_env = "musl", target_env = "ohos")),
+            not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")),
             not(target_arch = "x86")
         ),
         repr(align(8))
@@ -3426,7 +3426,7 @@ f! {
         offset_of!(crate::sockaddr_un, sun_path) + crate::strlen(s.sun_path.as_ptr())
     }
 
-    #[cfg(target_env = "musl")]
+    #[cfg(any(target_env = "musl", all(target_os = "linux", target_env = "")))]
     pub unsafe fn SUN_LEN(s: crate::sockaddr_un) -> usize {
         2 * crate::strlen(s.sun_path.as_ptr())
     }
@@ -3823,7 +3823,7 @@ extern "C" {
 //
 // * musl has 64-bit versions only so aliases the LFS64 symbols to the standard ones
 cfg_if! {
-    if #[cfg(not(any(target_env = "musl", target_env = "ohos")))] {
+    if #[cfg(not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")))] {
         extern "C" {
             pub fn fallocate64(fd: c_int, mode: c_int, offset: off64_t, len: off64_t) -> c_int;
             pub fn fgetpos64(stream: *mut crate::FILE, ptr: *mut crate::fpos64_t) -> c_int;
@@ -3844,7 +3844,7 @@ cfg_if! {
     if #[cfg(target_env = "uclibc")] {
         mod uclibc;
         pub use self::uclibc::*;
-    } else if #[cfg(any(target_env = "musl", target_env = "ohos"))] {
+    } else if #[cfg(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"))] {
         mod musl;
         pub use self::musl::*;
     } else if #[cfg(target_env = "gnu")] {

@@ -140,7 +140,7 @@ s! {
         #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
         __pad14: Padding<u32>,
 
-        #[cfg(any(target_env = "musl", target_env = "ohos", target_os = "emscripten"))]
+        #[cfg(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos", target_os = "emscripten"))]
         __reserved: Padding<[c_long; 16]>,
     }
 
@@ -427,7 +427,9 @@ extern "C" {
 // own link configuration when required, rather than unconditionally linking everything that may
 // possibly be needed.
 cfg_if! {
-    if #[cfg(any(
+    if #[cfg(all(target_os = "linux", target_env = ""))] {
+        // linux-none: no libc to link
+    } else if #[cfg(any(
         target_os = "l4re",
         target_os = "espidf",
         target_os = "nuttx"
@@ -518,7 +520,7 @@ cfg_if! {
         #[link(name = "dl")]
         extern "C" {}
     } else if #[cfg(any(
-        all(target_env = "musl", not(libc_pauthtest)),
+        all(any(target_env = "musl", all(target_os = "linux", target_env = "")), not(libc_pauthtest)),
         target_env = "ohos"
     ))] {
         #[cfg_attr(
@@ -1469,7 +1471,7 @@ extern "C" {
         any(
             all(
                 target_os = "linux",
-                not(any(target_env = "musl", target_env = "ohos"))
+                not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"))
             ),
             target_os = "freebsd",
             target_os = "cygwin",

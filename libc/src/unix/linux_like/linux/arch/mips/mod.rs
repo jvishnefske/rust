@@ -222,7 +222,7 @@ pub const BLKSSZGET: Ioctl = 0x20001268;
 pub const BLKPBSZGET: Ioctl = 0x2000127B;
 
 cfg_if! {
-    if #[cfg(target_env = "musl")] {
+    if #[cfg(any(target_env = "musl", all(target_os = "linux", target_env = "")))] {
         pub const TIOCGRS485: Ioctl = 0x4020542e;
         pub const TIOCSRS485: Ioctl = u32_cast_ioctl(0xc020542f);
     }
@@ -268,7 +268,7 @@ cfg_if! {
         #[allow(deprecated)]
         #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIMIT_NLIMITS: crate::__rlimit_resource_t = RLIM_NLIMITS;
-    } else if #[cfg(target_env = "musl")] {
+    } else if #[cfg(any(target_env = "musl", all(target_os = "linux", target_env = "")))] {
         pub const RLIMIT_CPU: c_int = 0;
         pub const RLIMIT_FSIZE: c_int = 1;
         pub const RLIMIT_DATA: c_int = 2;

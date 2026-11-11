@@ -428,7 +428,7 @@ pub const ERA_T_FMT: crate::nl_item = DATE_BASE + 0x31;
 cfg_if! {
     if #[cfg(any(
         target_env = "gnu",
-        target_env = "musl",
+        any(target_env = "musl", all(target_os = "linux", target_env = "")),
         target_env = "ohos"
     ))] {
         pub const CODESET: crate::nl_item = 14;
@@ -1460,7 +1460,7 @@ f! {
 
         let mut max_addr = (*mhdr).msg_control as usize + (*mhdr).msg_controllen as usize;
 
-        if cfg!(any(target_env = "musl", target_env = "ohos")) {
+        if cfg!(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")) {
             // musl and some of its descendants do `>= max_addr`
             // comparisons in the if statement below.
             // https://www.openwall.com/lists/musl/2025/12/27/1
@@ -1593,7 +1593,7 @@ safe_f! {
 
 cfg_if! {
     if #[cfg(all(
-        any(target_env = "gnu", target_env = "musl", target_env = "ohos"),
+        any(target_env = "gnu", any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"),
         any(target_arch = "x86_64", target_arch = "x86")
     ))] {
         extern "C" {
@@ -1689,7 +1689,7 @@ cfg_if! {
 
 extern "C" {
     #[cfg_attr(
-        not(any(target_env = "musl", target_env = "ohos")),
+        not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")),
         link_name = "__xpg_strerror_r"
     )]
     pub fn strerror_r(errnum: c_int, buf: *mut c_char, buflen: size_t) -> c_int;
@@ -1925,7 +1925,7 @@ extern "C" {
 }
 
 cfg_if! {
-    if #[cfg(not(any(target_env = "musl", target_env = "ohos")))] {
+    if #[cfg(not(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos")))] {
         extern "C" {
             pub fn freopen64(
                 filename: *const c_char,

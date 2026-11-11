@@ -150,7 +150,7 @@ cfg_if! {
     ))] {
         mod glibc;
         pub(crate) use glibc::*;
-    } else if #[cfg(any(target_env = "musl", target_env = "ohos"))] {
+    } else if #[cfg(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"))] {
         // OhOS also uses the musl libc
         mod musl;
         pub use musl::sched::*;
@@ -236,7 +236,7 @@ cfg_if! {
 
 // Per-env headers we export
 cfg_if! {
-    if #[cfg(any(target_env = "musl", target_env = "ohos"))] {
+    if #[cfg(any(any(target_env = "musl", all(target_os = "linux", target_env = "")), target_env = "ohos"))] {
         pub use sys::socket::*;
     }
 }
