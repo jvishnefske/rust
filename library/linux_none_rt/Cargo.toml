@@ -1,0 +1,21 @@
+[package]
+name = "linux_none_rt"
+version = "0.1.0"
+edition = "2024"
+description = "Runtime for std on *-unknown-linux-none: raw syscalls, process entry, ELF TLS, threads, allocator"
+license = "MIT OR Apache-2.0"
+
+[lib]
+test = false
+doctest = false
+
+[features]
+# built as a dependency of std (see `cargo xtask sysroot`)
+rustc-dep-of-std = ["dep:core"]
+
+[dependencies]
+core = { version = "1.0.0", optional = true, package = "rustc-std-workspace-core" }
+
+[lints.rust]
+# `kani`: set by the Kani verifier; `linux_none`: set by build.rs
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(kani)", "cfg(linux_none)"] }
